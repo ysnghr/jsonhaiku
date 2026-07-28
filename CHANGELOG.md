@@ -13,7 +13,24 @@ deprecation warnings first.
 
 ### Added
 
-- Project scaffolding: `src`-layout package, PEP 561 `py.typed` marker, MIT license.
+- `describe(data)` — the public entry point. Returns a frozen `Result` with
+  `.compact` (the LLM-facing type map), `.schema` (JSON Schema Draft 2020-12),
+  `.tree` (plain dicts) and `.root` (the type tree).
+- Type inference over every JSON shape: scalars, unions, nested objects,
+  homogeneous and heterogeneous arrays, nullables and empty containers.
+  `integer` and `float` merge to `number`; booleans never merge with integers;
+  fields missing from some observations are marked optional.
+- Deterministic output by construction: object fields are stored sorted and
+  union members canonically ordered, so key order in the source document cannot
+  change a single byte of the result.
+- Values that `json.dumps` cannot serialize are described as `unknown` and raise
+  an `UnsupportedValueWarning` rather than being guessed at.
+- `jsonhaiku` command line interface: reads a file or standard input, writes
+  `compact`, `schema` or `tree` output.
+
+#### Project infrastructure
+
+- `src`-layout package, PEP 561 `py.typed` marker, MIT license.
 - Build with `hatchling`; version single-sourced from `src/jsonhaiku/__about__.py`.
 - Tooling: `ruff` (lint + format), `mypy --strict`, `pytest` with coverage, `nox` sessions.
 - CI on GitHub Actions: lint, type check, test matrix (CPython 3.10-3.14 plus

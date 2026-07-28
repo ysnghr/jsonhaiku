@@ -80,16 +80,58 @@ pip install "jsonhaiku[tokens]"    # + tiktoken, for token counting
 Requires Python 3.10 or newer. The core package has no runtime dependencies and
 ships type hints ([PEP 561](https://peps.python.org/pep-0561/)).
 
-## Planned API
+## Usage
 
 ```python
 from jsonhaiku import describe
 
 result = describe(data)
 
-result.compact            # str  — the TypeScript-flavored type map (default)
+result.compact   # str  — the TypeScript-flavored type map (default rendering)
+result.schema    # dict — JSON Schema (Draft 2020-12)
+result.tree      # dict — the type tree as plain dicts, for your own tooling
+result.root      # the type tree itself, if you want to walk it
+```
+
+`print(result)` gives you the compact rendering, so it drops straight into an
+f-string in a prompt.
+
+Describing a list of records merges every observation into one shape:
+
+```python
+>>> print(describe([{"id": 1, "name": "a"}, {"id": 2, "name": None}]))
+[{
+  "id": "integer",
+  "name": "string | null"
+}]
+```
+
+A few rules worth knowing:
+
+- `"string | null"` — the value was sometimes null. `"string | undefined"` — the
+  key was sometimes missing. Different facts, never conflated.
+- `integer` and `float` in one field become `number`; JSON has one number type.
+- `[]` means "an array we only ever saw empty", `{}` an object with no keys.
+- Object keys are sorted and unions are canonically ordered, so the same data
+  always produces byte-identical output — good for caching, diffing and prompt
+  stability.
+- Values `json.dumps` could not serialize are described as `unknown`, with a
+  warning. jsonhaiku never guesses.
+
+### From the shell
+
+```bash
+curl -s https://api.example.com/sessions | jsonhaiku
+jsonhaiku response.json --format schema
+jsonhaiku response.json --format tree
+```
+
+### Planned API
+
+Not built yet — see the roadmap below:
+
+```python
 result.typescript()       # str  — full TS interfaces
-result.json_schema        # dict — standard JSON Schema
 result.yaml               # str  — YAML rendering
 result.samples            # list — smart-selected representative records
 result.token_count()      # int  — tokens for the compact form (requires `tiktoken`)
@@ -115,11 +157,10 @@ h.filter(path="$[*]", where="duration > 60 and room.name == 'HALL H'")
 
 ## Roadmap — coming soon
 
-Actively developed. Nothing but the version is exported yet; here's what's
-landing, roughly in order:
+Actively developed. What's done and what's landing next, roughly in order:
 
-- [ ] The core `describe()` API and compact rendering.
-- [ ] Multiple output formats (TypeScript, JSON Schema, YAML) and token counting.
+- [x] The core `describe()` API, compact rendering, JSON Schema, and a CLI.
+- [ ] More output formats (TypeScript, YAML) and token counting.
 - [ ] Enum detection and value statistics.
 - [ ] Smart representative sample selection.
 - [ ] A stateful path-scoped API for agent-driven exploration.
