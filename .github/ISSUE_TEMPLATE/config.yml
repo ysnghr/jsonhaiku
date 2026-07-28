@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/ysnghr/jsonhaiku/discussions/categories/q-a
+    about: Ask in Discussions — questions get answered faster there than in issues.
+  - name: Idea or design proposal
+    url: https://github.com/ysnghr/jsonhaiku/discussions/categories/ideas
+    about: Sketch a design before writing code. Cheaper than a rejected PR.
+  - name: Security vulnerability
+    url: https://github.com/ysnghr/jsonhaiku/security/advisories/new
+    about: Report privately. Please do not open a public issue.

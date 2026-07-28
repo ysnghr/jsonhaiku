@@ -1,0 +1,68 @@
+name: Bug report
+description: Something behaves differently than documented.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A minimal reproducing payload is worth ten
+        paragraphs of description — please redact real data rather than
+        omitting it.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest input and code that shows the problem.
+      render: python
+      value: |
+        import jsonhaiku
+
+        data = {"...": "..."}
+        print(jsonhaiku.describe(data).compact)
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Actual output or traceback
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: jsonhaiku version
+      description: "`python -c \"import jsonhaiku; print(jsonhaiku.__version__)\"`"
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version and OS
+      description: "`python -VV` plus your platform"
+      placeholder: CPython 3.12.4 on macOS 15.1 (arm64)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
+        - label: I'm on the latest release (or `main`).
+          required: false

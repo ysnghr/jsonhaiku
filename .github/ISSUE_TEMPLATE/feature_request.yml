@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a capability jsonhaiku doesn't have yet.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: >
+        Describe the situation, not the solution. What are you doing with a
+        JSON payload and an LLM, and where does jsonhaiku get in the way?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: >
+        What would the API or output look like? Sketch the call and the
+        rendering you'd want back.
+      render: python
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Including "I wrote it by hand and it was 30 lines" — that's useful signal.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where does this belong?
+      options:
+        - Core library (dependency-free)
+        - An optional extra (extra dependencies acceptable)
+        - MCP server
+        - Documentation only
+        - Not sure
+    validations:
+      required: true
