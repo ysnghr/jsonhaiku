@@ -88,16 +88,15 @@ class ObjectNode:
         """Freeze the field mapping in canonical (sorted) key order."""
         object.__setattr__(self, "fields", _frozen_fields(self.fields))
 
-    # A mappingproxy cannot be pickled or deep-copied, and results are meant to
-    # be cached and shipped between processes. Unwrap it on the way out and wrap
-    # it again on the way back in.
-    def __getstate__(self) -> dict[str, Field]:
-        """Return picklable state: the fields as a plain dictionary."""
-        return dict(self.fields)
+    def __reduce__(self) -> tuple[type[ObjectNode], tuple[dict[str, Field]]]:
+        """Support pickling and deep-copying by rebuilding through the constructor.
 
-    def __setstate__(self, state: dict[str, Field]) -> None:
-        """Restore from :meth:`__getstate__`, re-freezing the field mapping."""
-        object.__setattr__(self, "fields", _frozen_fields(state))
+        A mappingproxy is neither picklable nor deep-copyable, and results are
+        meant to be cached and shipped between processes. ``__reduce__`` rather
+        than ``__getstate__`` because on Python 3.10 the ``slots=True`` dataclass
+        transform installs its own ``__getstate__`` over anything defined here.
+        """
+        return (type(self), (dict(self.fields),))
 
 
 @dataclass(frozen=True, slots=True)
