@@ -58,6 +58,7 @@ test = [
     "syrupy>=4.6",
     "hypothesis>=6.100",
     "packaging>=24.0",
+    "jsonschema>=4.21",
 ]
 lint = ["ruff>=0.16,<0.17"]
 typing = [
@@ -68,6 +69,7 @@ typing = [
     "hypothesis>=6.100",
     "syrupy>=4.6",
     "packaging>=24.0",
+    "jsonschema>=4.21",
     "nox>=2024.4.15",
 ]
 # Recursive extras keep `dev` a single install target without duplicating pins.
@@ -220,8 +222,9 @@ pretty = true
 show_error_code_links = true
 sqlite_cache = true
 
+# Third-party packages that ship no type information of their own.
 [[tool.mypy.overrides]]
-module = ["tiktoken.*"]
+module = ["jsonschema.*", "tiktoken.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
