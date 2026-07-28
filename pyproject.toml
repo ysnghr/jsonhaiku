@@ -79,6 +79,9 @@ dev = [
     "pre-commit>=3.7",
 ]
 
+[project.scripts]
+jsonhaiku = "jsonhaiku.cli:main"
+
 [project.urls]
 Homepage = "https://jsonhaiku.dev"
 Documentation = "https://jsonhaiku.dev"
@@ -172,6 +175,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Parsed by hatchling at build time; keep it a bare version constant.
 "src/jsonhaiku/__about__.py" = ["I002"]
+# A command line interface is allowed to write to stdout.
+"src/jsonhaiku/cli.py" = ["T201"]
 "noxfile.py" = ["D100", "S101"]
 "tests/**/*.py" = [
     "ANN",     # test signatures are noise
