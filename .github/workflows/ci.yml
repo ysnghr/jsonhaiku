@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  PYTHONUNBUFFERED: "1"
+  # Fail fast instead of hanging on a flaky index.
+  UV_HTTP_TIMEOUT: "120"
+
+jobs:
+  lint:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - name: Create environment
+        run: uv venv --python 3.12 .venv
+      - name: Activate environment
+        shell: bash
+        run: |
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Install
+        run: uv pip install -e ".[lint]"
+      - name: ruff check
+        run: ruff check --output-format=github src tests noxfile.py
+      - name: ruff format --check
+        run: ruff format --check --diff src tests noxfile.py
+
+  typecheck:
+    name: Type check (mypy --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - name: Create environment
+        run: uv venv --python 3.10 .venv
+      - name: Activate environment
+        shell: bash
+        run: |
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Install
+        # Type check against the oldest supported interpreter: that is where
+        # `X | Y` annotations and stdlib generics actually have to hold up.
+        run: uv pip install -e ".[typing]"
+      - name: mypy
+        run: mypy
+
+  test:
+    name: Test ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    # bash everywhere, including Windows: one quoting dialect, one set of
+    # surprises. `--cov-report=` with an empty value does not survive pwsh.
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # 3.14t is the free-threaded build. It is a required leg, not an
+        # experiment: a pure-Python library has no excuse for failing on it.
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
+        include:
+          # Cross-platform coverage on the boundary interpreters only: the
+          # library is pure Python, so the middle of the matrix adds minutes
+          # and almost no signal.
+          - os: macos-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.10"
+          - os: windows-latest
+            python-version: "3.14"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - name: Create environment
+        run: uv venv --python ${{ matrix.python-version }} .venv
+      - name: Activate environment
+        shell: bash
+        run: |
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          if [ -d .venv/bin ]; then
+            echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          else
+            echo "$PWD/.venv/Scripts" >> "$GITHUB_PATH"
+          fi
+      - name: Install
+        run: uv pip install -e ".[test]"
+      - name: Show interpreter
+        run: python -VV
+      - name: Test
+        env:
+          # One data file per matrix leg so the coverage job can merge them.
+          COVERAGE_FILE: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
+        run: pytest --cov-report=
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
+          path: .coverage.*
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 3
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+      - name: Create environment
+        run: uv venv --python 3.12 .venv
+      - name: Activate environment
+        shell: bash
+        run: |
+          echo "VIRTUAL_ENV=$PWD/.venv" >> "$GITHUB_ENV"
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Install coverage
+        run: uv pip install 'coverage[toml]>=7.5'
+      - name: Combine and report
+        run: |
+          coverage combine
+          coverage report --fail-under=100
+          {
+            echo '## Coverage'
+            echo
+            coverage report --format=markdown
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: HTML report
+        if: always()
+        run: coverage html --directory=htmlcov || true
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html
+          path: htmlcov
+          if-no-files-found: ignore
+          retention-days: 7
+
+  package:
+    name: Build & verify distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Validate metadata
+        run: uvx twine check --strict dist/*
+      - name: Verify wheel contents
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, tarfile, zipfile, sys
+
+          wheel = glob.glob("dist/*.whl")[0]
+          names = zipfile.ZipFile(wheel).namelist()
+          missing = [n for n in ("jsonhaiku/__init__.py", "jsonhaiku/py.typed")
+                     if n not in names]
+          if missing:
+              sys.exit(f"wheel is missing {missing}; contents: {names}")
+
+          sdist = glob.glob("dist/*.tar.gz")[0]
+          members = tarfile.open(sdist).getnames()
+          leaked = [m for m in members if "/documents/" in m]
+          if leaked:
+              sys.exit(f"private planning material leaked into sdist: {leaked}")
+          print(f"ok: {wheel} and {sdist} look sane")
+          PY
+      - name: Install the built wheel in a clean environment
+        shell: bash
+        run: |
+          uv venv --python 3.12 /tmp/wheel-check
+          VIRTUAL_ENV=/tmp/wheel-check uv pip install --no-cache dist/*.whl
+          /tmp/wheel-check/bin/python -c \
+            "import jsonhaiku; print('installed', jsonhaiku.__version__)"
+      - name: Upload distribution
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+
+  hooks:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+        with:
+          enable-cache: true
+      - name: Run all hooks
+        run: uvx pre-commit run --all-files --show-diff-on-failure --color=always
+
+  ci:
+    # Single required status check for branch protection: add *this* job to the
+    # ruleset and the matrix can change freely without touching settings.
+    name: CI success
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test, coverage, package, hooks]
+    if: always()
+    steps:
+      - name: Fail if any dependency failed
+        shell: bash
+        run: |
+          echo '${{ toJSON(needs) }}'
+          if echo '${{ toJSON(needs) }}' | grep -qE '"result": "(failure|cancelled)"'; then
+            echo "::error::at least one required job did not succeed"
+            exit 1
+          fi
+          echo "all required jobs succeeded"
