@@ -34,7 +34,7 @@ from jsonhaiku.nodes import (
 from jsonhaiku.result import Result
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 
 __all__ = [
     "UnsupportedValueWarning",
@@ -158,18 +158,45 @@ def merge_all(nodes: Iterable[Node]) -> Node:
 def union_of(nodes: Iterable[Node]) -> Node:
     """Build the union of ``nodes``, normalising it into canonical form.
 
-    Nested unions are flattened, duplicates removed, and mixed numeric types
-    collapsed to ``number``. A union of one member collapses to that member, so
-    this never produces a pointless single-member union.
-    """
-    flattened: list[Node] = []
-    for node in nodes:
-        flattened.extend(node.members if isinstance(node, UnionNode) else (node,))
+    Nested unions are flattened, duplicates removed, mixed numeric types
+    collapsed to ``number``, and — importantly — members of the same kind merged
+    with each other. A union therefore holds at most one array member and at
+    most one object member, which is what makes ``merge`` commutative and
+    associative: ``[null, [], [null]]`` must describe the same way whatever
+    order those three elements arrive in.
 
-    members = _unique(_collapse_numerics(flattened))
+    A union of one member collapses to that member, so this never produces a
+    pointless single-member union.
+    """
+    scalars: list[Node] = []
+    arrays: list[Node] = []
+    objects: list[Node] = []
+    for node in _flatten(nodes):
+        if isinstance(node, ArrayNode):
+            arrays.append(node)
+        elif isinstance(node, ObjectNode):
+            objects.append(node)
+        else:
+            scalars.append(node)
+
+    members = _unique(_collapse_numerics(scalars))
+    if arrays:
+        members.append(reduce(merge, arrays))
+    if objects:
+        members.append(reduce(merge, objects))
+
     if len(members) == 1:
         return members[0]
     return UnionNode(tuple(members))
+
+
+def _flatten(nodes: Iterable[Node]) -> Iterator[Node]:
+    """Yield ``nodes``, replacing any union with its members."""
+    for node in nodes:
+        if isinstance(node, UnionNode):
+            yield from node.members
+        else:
+            yield node
 
 
 def _merge_objects(left: ObjectNode, right: ObjectNode) -> ObjectNode:

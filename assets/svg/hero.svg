@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480">
+  <defs>
+    <clipPath id="hero-clip"><rect width="1280" height="480" rx="8"/></clipPath>
+  </defs>
+  <g clip-path="url(#hero-clip)">
+    <rect width="1280" height="480" fill="#eef3f8"/>
+
+    <!-- decorative rings -->
+    <g transform="translate(1000, 240)" opacity="0.55">
+      <circle r="290" fill="none" stroke="#cfd9e3" stroke-width="1.5"/>
+      <circle r="230" fill="none" stroke="#cfd9e3" stroke-width="1.5"/>
+      <circle r="170" fill="none" stroke="#cfd9e3" stroke-width="1.5"/>
+      <circle r="110" fill="none" stroke="#d4dde6" stroke-width="1.5"/>
+    </g>
+
+    <!-- big enso, right -->
+    <g transform="translate(856, 60)">
+      <svg width="360" height="360" viewBox="0 0 512 512">
+        <path d="M 256 88 C 158 88, 96 158, 96 256 C 96 354, 158 424, 256 424 C 344 424, 416 362, 424 268" fill="none" stroke="#0f1720" stroke-width="30" stroke-linecap="round"/>
+        <circle cx="256" cy="256" r="26" fill="#14b8a6"/>
+      </svg>
+    </g>
+
+    <!-- top-left corner mark -->
+    <text x="40" y="44" font-family="'JetBrains Mono', 'SF Mono', 'Menlo', monospace" font-size="11" letter-spacing="0.12em" fill="#6b7784" text-transform="uppercase">JSONHAIKU · V0.1</text>
+
+    <!-- top-right pills -->
+    <g transform="translate(1088, 24)">
+      <rect x="0" y="0" width="92" height="26" rx="13" fill="none" stroke="#14b8a6" stroke-width="1"/>
+      <text x="46" y="17" font-family="'JetBrains Mono', 'SF Mono', 'Menlo', monospace" font-size="11" fill="#14b8a6" text-anchor="middle">type-aware</text>
+    </g>
+    <g transform="translate(1188, 24)">
+      <rect x="0" y="0" width="80" height="26" rx="13" fill="none" stroke="#0f1720" stroke-width="1"/>
+      <text x="40" y="17" font-family="'JetBrains Mono', 'SF Mono', 'Menlo', monospace" font-size="11" fill="#0f1720" text-anchor="middle">llm-ready</text>
+    </g>
+
+    <!-- left: brand + tagline -->
+    <g transform="translate(72, 140)">
+      <!-- logo + name -->
+      <svg width="72" height="72" viewBox="0 0 512 512">
+        <path d="M 256 88 C 158 88, 96 158, 96 256 C 96 354, 158 424, 256 424 C 344 424, 416 362, 424 268" fill="none" stroke="#0f1720" stroke-width="32" stroke-linecap="round"/>
+        <circle cx="256" cy="256" r="28" fill="#14b8a6"/>
+      </svg>
+      <text x="94" y="52" font-family="'JetBrains Mono', 'SF Mono', 'Menlo', monospace" font-weight="600" font-size="44" letter-spacing="-0.02em" fill="#0f1720">jsonhaiku</text>
+
+      <!-- tagline -->
+      <text y="120" font-family="'Instrument Serif', 'Georgia', serif" font-size="52" letter-spacing="-0.015em" fill="#0f1720">
+        <tspan x="0">Megabytes of JSON,</tspan>
+        <tspan x="0" dy="55" font-style="italic" fill="#14b8a6">described</tspan>
+        <tspan font-style="normal" fill="#0f1720"> in a whisper.</tspan>
+      </text>
+
+      <!-- description -->
+      <text y="238" font-family="'Inter', 'Helvetica Neue', sans-serif" font-size="16" fill="#4a5764" line-height="1.6">
+        <tspan x="0">Compact, type-aware descriptions of large JSON payloads —</tspan>
+        <tspan x="0" dy="26">small enough to fit in an LLM prompt, rich enough to reason with.</tspan>
+      </text>
+    </g>
+
+    <!-- bottom-left install -->
+    <text x="40" y="456" font-family="'JetBrains Mono', 'SF Mono', 'Menlo', monospace" font-size="13" letter-spacing="0.04em" fill="#6b7784">$ pip install jsonhaiku</text>
+
+    <!-- bottom-right tagline -->
+    <text x="1240" y="456" font-family="'Instrument Serif', 'Georgia', serif" font-style="italic" font-size="16" fill="#4a5764" text-anchor="end">— an unclosed circle around a single value.</text>
+  </g>
+</svg>
