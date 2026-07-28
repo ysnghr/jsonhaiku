@@ -1,0 +1,12 @@
+# Normalise line endings so Windows contributors don't produce CRLF diffs.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gz  binary
+*.zip binary
+*.whl binary
+
+# Keep planning material and CI config out of language statistics.
+documents/** linguist-documentation
+.github/** linguist-vendored

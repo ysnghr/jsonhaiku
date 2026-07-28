@@ -1,0 +1,70 @@
+# --- Project-private planning material (never published) -------------------
+documents/
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60w/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Environments ----------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# --- Testing / coverage / type checking ------------------------------------
+.pytest_cache/
+.hypothesis/
+.nox/
+.tox/
+.cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+nosetests.xml
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.benchmarks/
+
+# --- Editors / OS ----------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# --- Misc ------------------------------------------------------------------
+*.log
+.env
+.env.*
+!.env.example
+uv.lock
