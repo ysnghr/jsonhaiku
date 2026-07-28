@@ -31,11 +31,19 @@ from jsonhaiku.nodes import (
     UnionNode,
     canonical,
 )
+from jsonhaiku.result import Result
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-__all__ = ["UnsupportedValueWarning", "infer", "merge", "merge_all", "union_of"]
+__all__ = [
+    "UnsupportedValueWarning",
+    "describe",
+    "infer",
+    "merge",
+    "merge_all",
+    "union_of",
+]
 
 _NUMERIC_NAMES = frozenset({"integer", "float", "number"})
 
@@ -56,6 +64,31 @@ class UnsupportedValueWarning(UserWarning):
     ``Decimal``, a ``set``, a numpy scalar — cannot be described faithfully, so it
     becomes ``unknown`` and says so out loud rather than being guessed at.
     """
+
+
+def describe(data: object) -> Result:
+    """Describe a JSON value.
+
+    This is the front door of the library.
+
+    Args:
+        data: Any JSON value — a dict, a list of thousands of records, or a bare
+            scalar. Values that :func:`json.dumps` could not serialise are
+            described as ``unknown`` and warned about.
+
+    Returns:
+        A :class:`~jsonhaiku.result.Result` exposing the description in every
+        supported format.
+
+    Example:
+        >>> from jsonhaiku import describe
+        >>> print(describe([{"id": 1, "name": "a"}, {"id": 2, "name": None}]).compact)
+        [{
+          "id": "integer",
+          "name": "string | null"
+        }]
+    """
+    return Result(root=infer(data))
 
 
 def infer(value: object) -> Node:

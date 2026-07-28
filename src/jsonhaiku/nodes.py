@@ -86,8 +86,18 @@ class ObjectNode:
 
     def __post_init__(self) -> None:
         """Freeze the field mapping in canonical (sorted) key order."""
-        ordered = MappingProxyType(dict(sorted(self.fields.items())))
-        object.__setattr__(self, "fields", ordered)
+        object.__setattr__(self, "fields", _frozen_fields(self.fields))
+
+    # A mappingproxy cannot be pickled or deep-copied, and results are meant to
+    # be cached and shipped between processes. Unwrap it on the way out and wrap
+    # it again on the way back in.
+    def __getstate__(self) -> dict[str, Field]:
+        """Return picklable state: the fields as a plain dictionary."""
+        return dict(self.fields)
+
+    def __setstate__(self, state: dict[str, Field]) -> None:
+        """Restore from :meth:`__getstate__`, re-freezing the field mapping."""
+        object.__setattr__(self, "fields", _frozen_fields(state))
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +119,12 @@ class UnionNode:
 Node: TypeAlias = Primitive | ArrayNode | ObjectNode | UnionNode
 """Any node in the type tree."""
 
+
+def _frozen_fields(fields: Mapping[str, Field]) -> Mapping[str, Field]:
+    """Return a read-only copy of ``fields`` in sorted key order."""
+    return MappingProxyType(dict(sorted(fields.items())))
+
+
 NULL = Primitive("null")
 BOOLEAN = Primitive("boolean")
 INTEGER = Primitive("integer")
@@ -116,9 +132,6 @@ FLOAT = Primitive("float")
 NUMBER = Primitive("number")
 STRING = Primitive("string")
 UNKNOWN = Primitive("unknown")
-
-EMPTY_ARRAY = ArrayNode(items=None)
-EMPTY_OBJECT = ObjectNode(fields={})
 
 
 def canonical(node: Node) -> str:
