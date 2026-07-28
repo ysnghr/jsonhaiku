@@ -1,0 +1,107 @@
+[
+  {
+    "id": 101,
+    "code": "S-101",
+    "title": "Opening Plenary: The State of Inference",
+    "duration": 90,
+    "parent_id": null,
+    "order": null,
+    "technical_equipment": null,
+    "is_published": true,
+    "content": {
+      "outline": "<p>A survey of the field, with pointers to open problems.</p>",
+      "internal_comment": null
+    },
+    "room": { "id": 1, "name": "HALL A", "capacity": 800 },
+    "session_type": { "id": 4, "name": "Plenary" },
+    "day": { "id": 1, "day_name": "Monday", "date": "2026-05-04" },
+    "speakers": [
+      { "id": 11, "name": "A. Rivera", "affiliation": "Institute of Fine Structures" }
+    ],
+    "tags": ["keynote", "overview"]
+  },
+  {
+    "id": 102,
+    "code": "S-102",
+    "title": "Workshop: Streaming Parsers in Practice",
+    "duration": 240,
+    "parent_id": null,
+    "order": null,
+    "technical_equipment": null,
+    "is_published": true,
+    "content": {
+      "outline": "<p>Hands-on session. Bring a laptop.</p>",
+      "internal_comment": null
+    },
+    "room": { "id": 2, "name": "HALL B", "capacity": 120 },
+    "session_type": { "id": 2, "name": "Workshop" },
+    "day": { "id": 1, "day_name": "Monday", "date": "2026-05-04" },
+    "speakers": [
+      { "id": 12, "name": "B. Okonkwo", "affiliation": "Northfield University" },
+      { "id": 13, "name": "C. Lindqvist", "affiliation": null }
+    ],
+    "tags": ["hands-on"]
+  },
+  {
+    "id": 103,
+    "code": "S-103",
+    "title": "Symposium: Schema Drift",
+    "duration": 120,
+    "parent_id": null,
+    "order": null,
+    "technical_equipment": null,
+    "is_published": false,
+    "content": {
+      "outline": null,
+      "internal_comment": null
+    },
+    "room": { "id": 3, "name": "HALL C", "capacity": 200 },
+    "session_type": { "id": 1, "name": "Symposium" },
+    "day": { "id": 2, "day_name": "Tuesday", "date": "2026-05-05" },
+    "speakers": [],
+    "tags": []
+  },
+  {
+    "id": 104,
+    "code": "S-104",
+    "title": "Special Interest: Tokenizer Trivia",
+    "duration": 45.5,
+    "parent_id": 103,
+    "order": null,
+    "technical_equipment": null,
+    "is_published": true,
+    "content": {
+      "outline": "<p>Informal.</p>",
+      "internal_comment": null
+    },
+    "room": { "id": 3, "name": "HALL C", "capacity": 200 },
+    "session_type": { "id": 3, "name": "Special Interest" },
+    "day": { "id": 2, "day_name": "Tuesday", "date": "2026-05-05" },
+    "speakers": [
+      { "id": 14, "name": "D. Ferreira", "affiliation": "Independent" }
+    ],
+    "tags": ["informal", "lunch"],
+    "livestream_url": "https://example.org/live/104"
+  },
+  {
+    "id": 105,
+    "code": "S-105",
+    "title": "Closing Remarks",
+    "duration": 30,
+    "parent_id": null,
+    "order": null,
+    "technical_equipment": null,
+    "is_published": true,
+    "content": {
+      "outline": "<p>Thanks, and see you next year.</p>",
+      "internal_comment": null
+    },
+    "room": { "id": 1, "name": "HALL A", "capacity": 800 },
+    "session_type": { "id": 4, "name": "Plenary" },
+    "day": { "id": 3, "day_name": "Wednesday", "date": "2026-05-06" },
+    "speakers": [
+      { "id": 11, "name": "A. Rivera", "affiliation": "Institute of Fine Structures" }
+    ],
+    "tags": ["closing"]
+  }
+]

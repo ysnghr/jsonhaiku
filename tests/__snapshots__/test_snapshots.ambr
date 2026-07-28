@@ -1,0 +1,443 @@
+# serializer version: 1
+# name: test_compact
+  '''
+  [{
+    "code": "string",
+    "content": {
+      "internal_comment": "null",
+      "outline": "string | null"
+    },
+    "day": {
+      "date": "string",
+      "day_name": "string",
+      "id": "integer"
+    },
+    "duration": "number",
+    "id": "integer",
+    "is_published": "boolean",
+    "livestream_url": "string | undefined",
+    "order": "null",
+    "parent_id": "integer | null",
+    "room": {
+      "capacity": "integer",
+      "id": "integer",
+      "name": "string"
+    },
+    "session_type": {
+      "id": "integer",
+      "name": "string"
+    },
+    "speakers": [{
+      "affiliation": "string | null",
+      "id": "integer",
+      "name": "string"
+    }],
+    "tags": ["string"],
+    "technical_equipment": "null",
+    "title": "string"
+  }]
+  '''
+# ---
+# name: test_schema
+  dict({
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'items': dict({
+      'properties': dict({
+        'code': dict({
+          'type': 'string',
+        }),
+        'content': dict({
+          'properties': dict({
+            'internal_comment': dict({
+              'type': 'null',
+            }),
+            'outline': dict({
+              'type': list([
+                'string',
+                'null',
+              ]),
+            }),
+          }),
+          'required': list([
+            'internal_comment',
+            'outline',
+          ]),
+          'type': 'object',
+        }),
+        'day': dict({
+          'properties': dict({
+            'date': dict({
+              'type': 'string',
+            }),
+            'day_name': dict({
+              'type': 'string',
+            }),
+            'id': dict({
+              'type': 'integer',
+            }),
+          }),
+          'required': list([
+            'date',
+            'day_name',
+            'id',
+          ]),
+          'type': 'object',
+        }),
+        'duration': dict({
+          'type': 'number',
+        }),
+        'id': dict({
+          'type': 'integer',
+        }),
+        'is_published': dict({
+          'type': 'boolean',
+        }),
+        'livestream_url': dict({
+          'type': 'string',
+        }),
+        'order': dict({
+          'type': 'null',
+        }),
+        'parent_id': dict({
+          'type': list([
+            'integer',
+            'null',
+          ]),
+        }),
+        'room': dict({
+          'properties': dict({
+            'capacity': dict({
+              'type': 'integer',
+            }),
+            'id': dict({
+              'type': 'integer',
+            }),
+            'name': dict({
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'capacity',
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'session_type': dict({
+          'properties': dict({
+            'id': dict({
+              'type': 'integer',
+            }),
+            'name': dict({
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'speakers': dict({
+          'items': dict({
+            'properties': dict({
+              'affiliation': dict({
+                'type': list([
+                  'string',
+                  'null',
+                ]),
+              }),
+              'id': dict({
+                'type': 'integer',
+              }),
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'required': list([
+              'affiliation',
+              'id',
+              'name',
+            ]),
+            'type': 'object',
+          }),
+          'type': 'array',
+        }),
+        'tags': dict({
+          'items': dict({
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'technical_equipment': dict({
+          'type': 'null',
+        }),
+        'title': dict({
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'code',
+        'content',
+        'day',
+        'duration',
+        'id',
+        'is_published',
+        'order',
+        'parent_id',
+        'room',
+        'session_type',
+        'speakers',
+        'tags',
+        'technical_equipment',
+        'title',
+      ]),
+      'type': 'object',
+    }),
+    'type': 'array',
+  })
+# ---
+# name: test_tree
+  dict({
+    'items': dict({
+      'fields': dict({
+        'code': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'string',
+          }),
+        }),
+        'content': dict({
+          'optional': False,
+          'type': dict({
+            'fields': dict({
+              'internal_comment': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'null',
+                }),
+              }),
+              'outline': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'union',
+                  'members': list([
+                    dict({
+                      'kind': 'primitive',
+                      'type': 'string',
+                    }),
+                    dict({
+                      'kind': 'primitive',
+                      'type': 'null',
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+            'kind': 'object',
+          }),
+        }),
+        'day': dict({
+          'optional': False,
+          'type': dict({
+            'fields': dict({
+              'date': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'string',
+                }),
+              }),
+              'day_name': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'string',
+                }),
+              }),
+              'id': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'integer',
+                }),
+              }),
+            }),
+            'kind': 'object',
+          }),
+        }),
+        'duration': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'number',
+          }),
+        }),
+        'id': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'integer',
+          }),
+        }),
+        'is_published': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'boolean',
+          }),
+        }),
+        'livestream_url': dict({
+          'optional': True,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'string',
+          }),
+        }),
+        'order': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'null',
+          }),
+        }),
+        'parent_id': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'union',
+            'members': list([
+              dict({
+                'kind': 'primitive',
+                'type': 'integer',
+              }),
+              dict({
+                'kind': 'primitive',
+                'type': 'null',
+              }),
+            ]),
+          }),
+        }),
+        'room': dict({
+          'optional': False,
+          'type': dict({
+            'fields': dict({
+              'capacity': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'integer',
+                }),
+              }),
+              'id': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'integer',
+                }),
+              }),
+              'name': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'string',
+                }),
+              }),
+            }),
+            'kind': 'object',
+          }),
+        }),
+        'session_type': dict({
+          'optional': False,
+          'type': dict({
+            'fields': dict({
+              'id': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'integer',
+                }),
+              }),
+              'name': dict({
+                'optional': False,
+                'type': dict({
+                  'kind': 'primitive',
+                  'type': 'string',
+                }),
+              }),
+            }),
+            'kind': 'object',
+          }),
+        }),
+        'speakers': dict({
+          'optional': False,
+          'type': dict({
+            'items': dict({
+              'fields': dict({
+                'affiliation': dict({
+                  'optional': False,
+                  'type': dict({
+                    'kind': 'union',
+                    'members': list([
+                      dict({
+                        'kind': 'primitive',
+                        'type': 'string',
+                      }),
+                      dict({
+                        'kind': 'primitive',
+                        'type': 'null',
+                      }),
+                    ]),
+                  }),
+                }),
+                'id': dict({
+                  'optional': False,
+                  'type': dict({
+                    'kind': 'primitive',
+                    'type': 'integer',
+                  }),
+                }),
+                'name': dict({
+                  'optional': False,
+                  'type': dict({
+                    'kind': 'primitive',
+                    'type': 'string',
+                  }),
+                }),
+              }),
+              'kind': 'object',
+            }),
+            'kind': 'array',
+          }),
+        }),
+        'tags': dict({
+          'optional': False,
+          'type': dict({
+            'items': dict({
+              'kind': 'primitive',
+              'type': 'string',
+            }),
+            'kind': 'array',
+          }),
+        }),
+        'technical_equipment': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'null',
+          }),
+        }),
+        'title': dict({
+          'optional': False,
+          'type': dict({
+            'kind': 'primitive',
+            'type': 'string',
+          }),
+        }),
+      }),
+      'kind': 'object',
+    }),
+    'kind': 'array',
+  })
+# ---
