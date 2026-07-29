@@ -5,6 +5,7 @@ output, so the library is one pipe away from any shell::
 
     curl -s https://api.example.com/sessions | jsonhaiku
     jsonhaiku response.json --format typescript
+    jsonhaiku shell data.json
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from jsonhaiku.__about__ import __version__
 from jsonhaiku.config import Config
@@ -22,6 +23,7 @@ from jsonhaiku.core import describe
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from jsonhaiku.explorer import JsonHaiku
     from jsonhaiku.result import Result
 
 __all__ = ["main"]
@@ -35,6 +37,20 @@ DEFAULT_INDENT = 2
 
 _VALID_FORMATS = ("compact", "typescript", "json_schema", "yaml", "schema", "tree")
 
+_SHELL_HELP = """\
+Commands:
+  overview                         top-level orientation
+  describe PATH [depth=N]          schema at path
+  sample PATH [n=N]                sample values at path
+  enum PATH                        unique values at path
+  stats PATH                       numeric/string statistics
+  search QUERY [path=PATH]         find values containing substring
+  filter PATH WHERE_EXPR           filter records by expression
+  paths [min=N] [max=N]            list all observed paths
+  help                             show this help
+  quit / exit                      leave the shell
+"""
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the command line interface.
@@ -47,6 +63,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         A process exit status: ``0`` on success, ``1`` if the input could not be
         read or parsed. Usage errors exit with ``2`` via argparse.
     """
+    effective_argv = list(argv) if argv is not None else sys.argv[1:]
+    if effective_argv and effective_argv[0] == "shell":
+        if len(effective_argv) < 2:  # noqa: PLR2004
+            print("usage: jsonhaiku shell FILE", file=sys.stderr)
+            return EXIT_BAD_INPUT
+        return _run_shell(effective_argv[1])
+
     args = _build_parser().parse_args(argv)
 
     try:
@@ -163,6 +186,158 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"jsonhaiku {__version__}")
     return parser
+
+
+def _run_shell(file_path: str) -> int:
+    """Run the interactive REPL."""
+    from jsonhaiku.explorer import JsonHaiku as Explorer  # noqa: PLC0415
+
+    try:
+        payload = Path(file_path).read_text(encoding="utf-8")
+    except OSError as error:
+        return _fail(f"cannot read {file_path}: {error.strerror or error}")
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError as error:
+        return _fail(f"invalid JSON: {error}")
+
+    h = Explorer(data)
+    ov = h.overview()
+    print(f"Loaded {ov['root_kind']} ({ov['total_size_bytes']} bytes, "
+          f"{ov['unique_paths']} paths)")
+    print('Type "help" for commands, "quit" to exit.\n')
+
+    while True:
+        try:
+            line = input("haiku> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if not line:
+            continue
+        if line in ("quit", "exit"):
+            break
+
+        try:
+            output = _dispatch_shell(h, line)
+            if output is not None:
+                print(json.dumps(output, indent=2, ensure_ascii=False))
+        except Exception as exc:  # noqa: BLE001
+            print(f"error: {exc}")
+
+    return EXIT_OK
+
+
+def _dispatch_shell(h: JsonHaiku, line: str) -> object:
+    """Dispatch a REPL command and return its result."""
+    parts = line.split()
+    cmd = parts[0].lower()
+    args = parts[1:]
+
+    handlers: dict[str, object] = {
+        "overview": h.overview,
+        "describe": lambda: _shell_describe(h, args),
+        "sample": lambda: _shell_sample(h, args),
+        "enum": lambda: _shell_enum(h, args),
+        "stats": lambda: _shell_stats(h, args),
+        "search": lambda: _shell_search(h, args),
+        "filter": lambda: _shell_filter(h, args),
+        "paths": lambda: _shell_paths(h, args),
+    }
+
+    if cmd == "help":
+        print(_SHELL_HELP)
+        return None
+
+    handler = handlers.get(cmd)
+    if handler is not None and callable(handler):
+        return handler()
+
+    print(f"unknown command: {cmd!r}. Type 'help' for available commands.")
+    return None
+
+
+def _shell_describe(h: JsonHaiku, args: list[str]) -> dict[str, Any]:
+    """Handle the describe shell command."""
+    path, kwargs = _parse_shell_args(args, defaults={"depth": "2"})
+    depth_str = kwargs.get("depth", "2")
+    depth: int | None = None if depth_str == "None" else int(depth_str)
+    return h.describe(path=path, depth=depth)
+
+
+def _shell_sample(h: JsonHaiku, args: list[str]) -> dict[str, Any]:
+    """Handle the sample shell command."""
+    path, kwargs = _parse_shell_args(args, defaults={"n": "3"})
+    return h.sample(path=path, n=int(kwargs.get("n", "3")))
+
+
+def _shell_enum(h: JsonHaiku, args: list[str]) -> dict[str, Any]:
+    """Handle the enum shell command."""
+    path, _kwargs = _parse_shell_args(args, defaults={})
+    return h.enum(path=path)
+
+
+def _shell_stats(h: JsonHaiku, args: list[str]) -> dict[str, Any]:
+    """Handle the stats shell command."""
+    path, _kwargs = _parse_shell_args(args, defaults={})
+    return h.stats(path=path)
+
+
+def _shell_search(h: JsonHaiku, args: list[str]) -> dict[str, Any]:
+    """Handle the search shell command."""
+    query_parts: list[str] = []
+    path = "$"
+    for arg in args:
+        if arg.startswith("path="):
+            path = arg.split("=", 1)[1]
+        else:
+            query_parts.append(arg)
+    query = " ".join(query_parts)
+    return h.search(value_contains=query, path=path)
+
+
+def _shell_filter(h: JsonHaiku, args: list[str]) -> dict[str, Any] | None:
+    """Handle the filter shell command."""
+    _MIN_FILTER_ARGS = 2  # noqa: N806
+    if len(args) < _MIN_FILTER_ARGS:
+        print("usage: filter PATH WHERE_EXPR")
+        return None
+    path = args[0]
+    where = " ".join(args[1:])
+    return h.filter(path=path, where=where)
+
+
+def _shell_paths(h: JsonHaiku, args: list[str]) -> list[str]:
+    """Handle the paths shell command."""
+    kwargs: dict[str, str] = {}
+    for arg in args:
+        if "=" in arg:
+            k, v = arg.split("=", 1)
+            kwargs[k] = v
+    min_depth = int(kwargs.get("min", "0"))
+    max_depth_str = kwargs.get("max")
+    max_depth = int(max_depth_str) if max_depth_str is not None else None
+    return h.list_paths(min_depth=min_depth, max_depth=max_depth)
+
+
+def _parse_shell_args(
+    args: list[str],
+    defaults: dict[str, str],
+) -> tuple[str, dict[str, str]]:
+    """Parse shell arguments into a path and keyword arguments."""
+    path = "$"
+    kwargs = dict(defaults)
+
+    for arg in args:
+        if "=" in arg:
+            key, value = arg.split("=", 1)
+            kwargs[key] = value
+        elif not arg.startswith("-"):
+            path = arg
+
+    return path, kwargs
 
 
 def _read(file: str) -> str:

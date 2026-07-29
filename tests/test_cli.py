@@ -148,6 +148,59 @@ class TestSamples:
         assert "// Samples:" not in out
 
 
+class TestShell:
+    def test_shell_overview(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        path = tmp_path / "data.json"
+        path.write_text(PAYLOAD, encoding="utf-8")
+        monkeypatch.setattr("builtins.input", lambda _: "quit")
+        assert main(["shell", str(path)]) == 0
+        out = capsys.readouterr().out
+        assert "Loaded" in out
+
+    def test_shell_missing_file(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["shell", "/nonexistent.json"]) == 1
+        assert "cannot read" in capsys.readouterr().err
+
+    def test_shell_no_file_arg(self) -> None:
+        assert main(["shell"]) == 1
+
+    def test_shell_commands(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        path = tmp_path / "data.json"
+        path.write_text(PAYLOAD, encoding="utf-8")
+        commands = iter(["overview", "describe $[*]", "enum $[*].id", "stats $[*].id", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(commands))
+        assert main(["shell", str(path)]) == 0
+        out = capsys.readouterr().out
+        assert "root_kind" in out
+
+    def test_shell_filter(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        path = tmp_path / "data.json"
+        path.write_text(PAYLOAD, encoding="utf-8")
+        commands = iter(["filter $[*] id == 1", "quit"])
+        monkeypatch.setattr("builtins.input", lambda _: next(commands))
+        assert main(["shell", str(path)]) == 0
+        out = capsys.readouterr().out
+        assert "results" in out
+
+    def test_shell_eof_exits(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        path = tmp_path / "data.json"
+        path.write_text(PAYLOAD, encoding="utf-8")
+
+        def raise_eof(_prompt: str) -> str:
+            raise EOFError
+
+        monkeypatch.setattr("builtins.input", raise_eof)
+        assert main(["shell", str(path)]) == 0
+
+
 class TestVersion:
     def test_reports_the_package_version(self, capsys: pytest.CaptureFixture[str]) -> None:
         with pytest.raises(SystemExit) as exit_info:
