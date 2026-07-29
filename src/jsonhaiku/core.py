@@ -66,7 +66,14 @@ class UnsupportedValueWarning(UserWarning):
     """
 
 
-def describe(data: object, config: Config | None = None) -> Result:
+def describe(
+    data: object,
+    config: Config | None = None,
+    *,
+    samples: int | None = None,
+    sample_strategy: object | None = None,
+    redact_samples: bool = False,
+) -> Result:
     """Describe a JSON value.
 
     This is the front door of the library.
@@ -77,6 +84,14 @@ def describe(data: object, config: Config | None = None) -> Result:
             described as ``unknown`` and warned about.
         config: Optional configuration controlling content-type detection,
             long-string handling, and depth limiting.
+        samples: When set, select this many representative records from the
+            input data. Only works when *data* is a list. Access them via
+            :attr:`Result.samples`.
+        sample_strategy: A :class:`~jsonhaiku.samples.SampleStrategy` instance
+            controlling how samples are chosen. Defaults to
+            :class:`~jsonhaiku.samples.DefaultStrategy`.
+        redact_samples: When ``True``, replace PII-like values in samples
+            with safe placeholders.
 
     Returns:
         A :class:`~jsonhaiku.result.Result` exposing the description in every
@@ -98,7 +113,29 @@ def describe(data: object, config: Config | None = None) -> Result:
 
         stats = collect_stats(data, config=cfg)
         root = enrich(root, stats, cfg)
-    return Result(root=root, config=cfg)
+
+    sample_list: tuple[object, ...] = ()
+    if samples is not None and samples > 0:
+        from jsonhaiku.samples import SampleStrategy, select_samples  # noqa: PLC0415
+
+        strat = sample_strategy if isinstance(sample_strategy, SampleStrategy) else None
+        picked = select_samples(data, samples, strategy=strat)
+        if redact_samples:
+            from jsonhaiku.redact import redact  # noqa: PLC0415
+            from jsonhaiku.samples import Sample  # noqa: PLC0415
+
+            picked = [
+                Sample(
+                    value=redact(s.value),
+                    path=s.path,
+                    reason=s.reason,
+                    score_components=s.score_components,
+                )
+                for s in picked
+            ]
+        sample_list = tuple(picked)
+
+    return Result(root=root, config=cfg, samples=sample_list)
 
 
 def infer(value: object, *, config: Config | None = None) -> Node:

@@ -48,10 +48,13 @@ class Result:
             representation is internal — walk :attr:`tree` if you need to
             consume it programmatically.
         config: The configuration used during inference.
+        samples: Representative records selected from the input data, or an
+            empty tuple when no samples were requested.
     """
 
     root: Node
     config: Config = field(default_factory=Config)
+    samples: tuple[Any, ...] = ()
 
     # ------------------------------------------------------------------
     # Rendering — each format is a thin wrapper over its renderer module
@@ -118,6 +121,39 @@ class Result:
 
         msg = f"unknown format {fmt!r}; choose from compact, typescript, json_schema, yaml"
         raise ValueError(msg)
+
+    # ------------------------------------------------------------------
+    # Samples
+    # ------------------------------------------------------------------
+
+    def render_with_samples(
+        self,
+        fmt: str = "compact",
+        *,
+        indent: int = 2,
+        root_name: str = "Root",
+    ) -> str:
+        """Render the type description with selected samples appended.
+
+        Args:
+            fmt: Output format for the type description.
+            indent: JSON indentation for sample values.
+            root_name: Interface name for TypeScript format.
+
+        Returns:
+            The type description followed by commented sample records.
+        """
+        schema_text = self.render(fmt, root_name=root_name)
+        if not self.samples:
+            return schema_text
+
+        parts = [schema_text, "", "// Samples:"]
+        for i, sample in enumerate(self.samples):
+            reason = getattr(sample, "reason", "")
+            value = getattr(sample, "value", sample)
+            parts.append(f"// [{i}] {reason}")
+            parts.append(json.dumps(value, indent=indent, ensure_ascii=False))
+        return "\n".join(parts)
 
     # ------------------------------------------------------------------
     # Token counting

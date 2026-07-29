@@ -28,10 +28,12 @@ from jsonhaiku.__about__ import __version__
 from jsonhaiku.config import Config
 from jsonhaiku.core import UnsupportedValueWarning, describe
 from jsonhaiku.result import Result
+from jsonhaiku.samples import Sample
 
 __all__ = [
     "Config",
     "Result",
+    "Sample",
     "UnsupportedValueWarning",
     "__version__",
     "describe",
