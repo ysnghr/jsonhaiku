@@ -66,8 +66,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         include_frequency=args.include_frequency,
         include_stats=args.include_stats,
     )
-    result = describe(data, config=config)
-    print(_render(result, args.format, args.indent, args.root_name))
+    result = describe(
+        data,
+        config=config,
+        samples=args.samples,
+        redact_samples=args.redact_samples,
+    )
+    if result.samples:
+        print(result.render_with_samples(args.format, root_name=args.root_name))
+    else:
+        print(_render(result, args.format, args.indent, args.root_name))
     return EXIT_OK
 
 
@@ -139,6 +147,19 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_false",
         dest="include_stats",
         help="disable numeric/string/boolean statistics",
+    )
+    parser.add_argument(
+        "--samples",
+        type=int,
+        default=None,
+        metavar="K",
+        help="select K representative sample records from array input",
+    )
+    parser.add_argument(
+        "--redact-samples",
+        action="store_true",
+        default=False,
+        help="replace PII-like values in samples with safe placeholders",
     )
     parser.add_argument("--version", action="version", version=f"jsonhaiku {__version__}")
     return parser

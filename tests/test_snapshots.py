@@ -98,6 +98,21 @@ def test_json_schema_with_cardinality(
     assert describe(sessions, config=cfg).json_schema == snapshot
 
 
+def test_compact_with_samples(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    assert describe(sessions, samples=3).render_with_samples() == snapshot
+
+
+def test_compact_with_samples_redacted(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    text = describe(sessions, samples=2, redact_samples=True).render_with_samples()
+    assert text == snapshot
+
+
 def test_description_size_does_not_grow_with_the_payload(sessions: list[object]) -> None:
     """The whole point: description size tracks the *shape*, not the record count.
 

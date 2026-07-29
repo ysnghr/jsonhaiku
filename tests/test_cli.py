@@ -128,6 +128,26 @@ class TestFailures:
         assert exit_info.value.code == 2
 
 
+@pytest.mark.usefixtures("stdin")
+class TestSamples:
+    def test_samples_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--samples", "2"]) == 0
+        out = capsys.readouterr().out
+        assert "// Samples:" in out
+        assert "// [0]" in out
+        assert "// [1]" in out
+
+    def test_redact_samples_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--samples", "1", "--redact-samples"]) == 0
+        out = capsys.readouterr().out
+        assert "// Samples:" in out
+
+    def test_no_samples_by_default(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main([]) == 0
+        out = capsys.readouterr().out
+        assert "// Samples:" not in out
+
+
 class TestVersion:
     def test_reports_the_package_version(self, capsys: pytest.CaptureFixture[str]) -> None:
         with pytest.raises(SystemExit) as exit_info:
