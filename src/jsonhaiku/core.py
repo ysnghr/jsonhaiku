@@ -91,7 +91,14 @@ def describe(data: object, config: Config | None = None) -> Result:
         }]
     """
     cfg = config or Config()
-    return Result(root=infer(data, config=cfg), config=cfg)
+    root = infer(data, config=cfg)
+    if cfg.track_cardinality:
+        from jsonhaiku.enrich import enrich  # noqa: PLC0415
+        from jsonhaiku.stats import collect_stats  # noqa: PLC0415
+
+        stats = collect_stats(data, config=cfg)
+        root = enrich(root, stats, cfg)
+    return Result(root=root, config=cfg)
 
 
 def infer(value: object, *, config: Config | None = None) -> Node:

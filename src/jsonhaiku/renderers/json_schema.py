@@ -32,13 +32,23 @@ def render_json_schema(node: Node, *, max_depth: int | None = None) -> dict[str,
 
 def _schema_with_depth(node: Node, *, depth: int, max_depth: int) -> dict[str, Any]:
     """Render with depth tracking."""
-    from jsonhaiku.nodes import ArrayNode, ObjectNode, Primitive, UnionNode  # noqa: PLC0415
+    from jsonhaiku.nodes import (  # noqa: PLC0415
+        ArrayNode,
+        EnumNode,
+        ObjectNode,
+        Primitive,
+        UnionNode,
+    )
 
     if isinstance(node, Primitive):
         from jsonhaiku.schema import _JSON_SCHEMA_TYPES  # noqa: PLC0415
 
         json_type = _JSON_SCHEMA_TYPES.get(node.name)
         return {} if json_type is None else {"type": json_type}
+    if isinstance(node, EnumNode):
+        from jsonhaiku.schema import _enum_schema  # noqa: PLC0415
+
+        return _enum_schema(node)
     if isinstance(node, ArrayNode):
         if node.items is None:
             return {"type": "array"}

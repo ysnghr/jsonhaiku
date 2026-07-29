@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from jsonhaiku.nodes import ArrayNode, Field, ObjectNode, Primitive, UnionNode
+from jsonhaiku.nodes import ArrayNode, EnumNode, Field, ObjectNode, Primitive, UnionNode
 
 if TYPE_CHECKING:
     from jsonhaiku.nodes import Node
@@ -64,6 +64,8 @@ def _value(
 
     if isinstance(node, Primitive):
         return _quote(_display_name(node) + suffix)
+    if isinstance(node, EnumNode):
+        return _quote(_enum_expr(node) + suffix)
     if isinstance(node, ArrayNode):
         element = (
             ""
@@ -144,7 +146,7 @@ def _depth_summary(node: ObjectNode) -> str:
 
 def _max_depth_below(node: Node) -> int:
     """Return the maximum nesting depth below ``node``."""
-    if isinstance(node, Primitive):
+    if isinstance(node, Primitive | EnumNode):
         return 0
     if isinstance(node, ArrayNode):
         return 0 if node.items is None else 1 + _max_depth_below(node.items)
@@ -164,6 +166,8 @@ def _union_member(
     """Render one member of a union that also contains structure."""
     if isinstance(node, Primitive):
         return _display_name(node)
+    if isinstance(node, EnumNode):
+        return _enum_expr(node)
     return _value(node, None, depth=depth, max_depth=max_depth)
 
 
@@ -173,6 +177,28 @@ def _scalar_union(node: UnionNode) -> str | None:
     if len(names) != len(node.members):
         return None
     return " | ".join(names)
+
+
+def _enum_expr(node: EnumNode) -> str:
+    """Render an enum node as ``enum('a' | 'b' | 3)``."""
+    parts: list[str] = []
+    for i, v in enumerate(node.values):
+        part = _enum_value_repr(v)
+        if node.frequencies is not None:
+            part += f" [{node.frequencies[i]}]"
+        parts.append(part)
+    return "enum(" + " | ".join(parts) + ")"
+
+
+def _enum_value_repr(value: str | int | bool | None) -> str:
+    """Format a single enum value for compact display."""
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, str):
+        return f"'{value}'"
+    return str(value)
 
 
 def _quote(text: str) -> str:

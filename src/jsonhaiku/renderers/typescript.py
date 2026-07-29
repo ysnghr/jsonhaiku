@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from jsonhaiku.nodes import (
     ArrayNode,
+    EnumNode,
     ObjectNode,
     Primitive,
     UnionNode,
@@ -75,6 +76,8 @@ def render_typescript(
         if " | " in element_ts:
             return f"type {root_name} = ({element_ts})[];"
         return f"type {root_name} = {element_ts}[];"
+    if isinstance(node, EnumNode):
+        return f"type {root_name} = {_enum_type(node)};"
     return f"type {root_name} = {_type_expr(node, depth=0, max_depth=max_depth)};"
 
 
@@ -115,19 +118,24 @@ def _type_expr(
 
     if isinstance(node, Primitive):
         return _TS_TYPE_MAP.get(node.name, "string")
-
+    if isinstance(node, EnumNode):
+        return _enum_type(node)
     if isinstance(node, ArrayNode):
-        items = node.items
-        inner = _type_expr(items, depth=depth, max_depth=max_depth) if items else "unknown"
-        if " | " in inner:
-            return f"({inner})[]"
-        return f"{inner}[]"
-
+        return _array_type(node, depth=depth, max_depth=max_depth)
     if isinstance(node, ObjectNode):
         return _inline_object(node, depth=depth, max_depth=max_depth)
 
     parts = [_type_expr(member, depth=depth, max_depth=max_depth) for member in node.members]
     return " | ".join(parts)
+
+
+def _array_type(node: ArrayNode, *, depth: int, max_depth: int | None) -> str:
+    """Render an array type expression."""
+    items = node.items
+    inner = _type_expr(items, depth=depth, max_depth=max_depth) if items else "unknown"
+    if " | " in inner:
+        return f"({inner})[]"
+    return f"{inner}[]"
 
 
 def _inline_object(
@@ -159,6 +167,21 @@ def _inline_object(
         lines.append(line)
     lines.append(f"{outer_indent}}}")
     return "\n".join(lines)
+
+
+def _enum_type(node: EnumNode) -> str:
+    """Render an enum node as TypeScript literal union."""
+    parts: list[str] = []
+    for v in node.values:
+        if v is None:
+            parts.append("null")
+        elif isinstance(v, bool):
+            parts.append(str(v).lower())
+        elif isinstance(v, str):
+            parts.append(f"'{v}'")
+        else:
+            parts.append(str(v))
+    return " | ".join(parts)
 
 
 def _trailing_comment(node: Node) -> str:

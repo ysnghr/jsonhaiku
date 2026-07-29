@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from jsonhaiku.nodes import ArrayNode, ObjectNode, Primitive, UnionNode
+from jsonhaiku.nodes import ArrayNode, EnumNode, ObjectNode, Primitive, UnionNode
 
 if TYPE_CHECKING:
     from jsonhaiku.nodes import Node
@@ -55,6 +55,8 @@ def _value(
     """Render ``node`` as a YAML fragment."""
     if isinstance(node, Primitive):
         return _display_name(node)
+    if isinstance(node, EnumNode):
+        return _enum_yaml(node)
     if isinstance(node, ArrayNode):
         return _array(node, depth=depth, max_depth=max_depth, inline=inline)
     if isinstance(node, ObjectNode):
@@ -153,6 +155,21 @@ def _union(
     if inline and depth > 0:
         return result
     return result
+
+
+def _enum_yaml(node: EnumNode) -> str:
+    """Render an enum node as ``enum(a | b | null)``."""
+    parts: list[str] = []
+    for v in node.values:
+        if v is None:
+            parts.append("null")
+        elif isinstance(v, bool):
+            parts.append(str(v).lower())
+        elif isinstance(v, str):
+            parts.append(v)
+        else:
+            parts.append(str(v))
+    return "enum(" + " | ".join(parts) + ")"
 
 
 def _field_label(key: str, optional: bool) -> str:

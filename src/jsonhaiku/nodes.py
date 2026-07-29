@@ -41,6 +41,9 @@ PrimitiveName: TypeAlias = Literal[
     "uuid_string",
     "email_string",
     "jwt_string",
+    "always_null",
+    "always_empty_array",
+    "always_empty_object",
 ]
 """The scalar type names jsonhaiku can emit.
 
@@ -132,7 +135,22 @@ class UnionNode:
         object.__setattr__(self, "members", tuple(sorted(self.members, key=sort_key)))
 
 
-Node: TypeAlias = Primitive | ArrayNode | ObjectNode | UnionNode
+@dataclass(frozen=True, slots=True)
+class EnumNode:
+    """A set of observed literal values rendered as an enum.
+
+    Attributes:
+        values: The distinct values, sorted (strings alphabetically, numbers
+            numerically, ``None`` last).
+        frequencies: Parallel to *values* — how many times each was observed.
+            ``None`` when ``include_frequency`` is off.
+    """
+
+    values: tuple[str | int | bool | None, ...]
+    frequencies: tuple[int, ...] | None = None
+
+
+Node: TypeAlias = Primitive | ArrayNode | ObjectNode | UnionNode | EnumNode
 """Any node in the type tree."""
 
 
@@ -156,6 +174,10 @@ ISO_DATETIME = Primitive("iso_datetime")
 UUID_STRING = Primitive("uuid_string")
 EMAIL_STRING = Primitive("email_string")
 JWT_STRING = Primitive("jwt_string")
+
+ALWAYS_NULL = Primitive("always_null")
+ALWAYS_EMPTY_ARRAY = Primitive("always_empty_array")
+ALWAYS_EMPTY_OBJECT = Primitive("always_empty_object")
 
 STRING_CONTENT_TYPES: frozenset[PrimitiveName] = frozenset(
     {
@@ -183,6 +205,8 @@ def canonical(node: Node) -> str:
     """
     if isinstance(node, Primitive):
         return node.name
+    if isinstance(node, EnumNode):
+        return "enum(" + "|".join(repr(v) for v in node.values) + ")"
     if isinstance(node, ArrayNode):
         return f"[{'' if node.items is None else canonical(node.items)}]"
     if isinstance(node, ObjectNode):
@@ -205,6 +229,8 @@ def sort_key(node: Node) -> tuple[int, str]:
         return (3, "")
     if isinstance(node, Primitive):
         return (0, node.name)
+    if isinstance(node, EnumNode):
+        return (0, canonical(node))
     if isinstance(node, ArrayNode):
         return (1, canonical(node))
     return (2, canonical(node))
@@ -219,6 +245,11 @@ def to_dict(node: Node) -> dict[str, Any]:
     """
     if isinstance(node, Primitive):
         return {"kind": "primitive", "type": node.name}
+    if isinstance(node, EnumNode):
+        result: dict[str, Any] = {"kind": "enum", "values": list(node.values)}
+        if node.frequencies is not None:
+            result["frequencies"] = list(node.frequencies)
+        return result
     if isinstance(node, ArrayNode):
         return {
             "kind": "array",

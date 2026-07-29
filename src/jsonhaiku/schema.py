@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from jsonhaiku.nodes import ArrayNode, ObjectNode, Primitive, UnionNode
+from jsonhaiku.nodes import ArrayNode, EnumNode, ObjectNode, Primitive, UnionNode
 
 if TYPE_CHECKING:
     from jsonhaiku.nodes import Node
@@ -40,6 +40,9 @@ _JSON_SCHEMA_TYPES: dict[str, str] = {
     "uuid_string": "string",
     "email_string": "string",
     "jwt_string": "string",
+    "always_null": "null",
+    "always_empty_array": "array",
+    "always_empty_object": "object",
     # "unknown" has no JSON Schema equivalent and is handled as "any" instead.
 }
 
@@ -57,8 +60,9 @@ def _schema(node: Node) -> dict[str, Any]:
     """Render ``node`` as a schema fragment, without the ``$schema`` key."""
     if isinstance(node, Primitive):
         json_type = _JSON_SCHEMA_TYPES.get(node.name)
-        # An empty schema accepts anything, which is exactly what "unknown" means.
         return {} if json_type is None else {"type": json_type}
+    if isinstance(node, EnumNode):
+        return _enum_schema(node)
     if isinstance(node, ArrayNode):
         if node.items is None:
             return {"type": "array"}
@@ -66,6 +70,28 @@ def _schema(node: Node) -> dict[str, Any]:
     if isinstance(node, ObjectNode):
         return _object_schema(node)
     return _union_schema(node)
+
+
+def _enum_schema(node: EnumNode) -> dict[str, Any]:
+    """Render an enum node as JSON Schema with ``enum`` keyword."""
+    types: set[str] = set()
+    for v in node.values:
+        if v is None:
+            types.add("null")
+        elif isinstance(v, bool):
+            types.add("boolean")
+        elif isinstance(v, int):
+            types.add("integer")
+        elif isinstance(v, str):
+            types.add("string")
+    sorted_types = sorted(types)
+    schema: dict[str, Any] = {}
+    if len(sorted_types) == 1:
+        schema["type"] = sorted_types[0]
+    else:
+        schema["type"] = sorted_types
+    schema["enum"] = list(node.values)
+    return schema
 
 
 def _object_schema(node: ObjectNode) -> dict[str, Any]:
