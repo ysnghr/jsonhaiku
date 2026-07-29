@@ -260,6 +260,7 @@ jsonhaiku response.json --track-cardinality --include-frequency
 jsonhaiku response.json --track-cardinality --no-stats
 jsonhaiku response.json --samples 3
 jsonhaiku response.json --samples 3 --redact-samples
+jsonhaiku shell response.json
 ```
 
 ### Smart sample selection
@@ -301,18 +302,48 @@ Opt-in PII redaction replaces emails, phone numbers, and sensitive field values:
 result = describe(data, samples=3, redact_samples=True)
 ```
 
-### Planned API
+### Progressive disclosure (interactive exploration)
 
-For agentic exploration of large payloads, a stateful interface with path-scoped access:
+For agentic loops where the LLM asks targeted questions instead of
+consuming the full schema up front:
 
 ```python
 from jsonhaiku import JsonHaiku
 
 h = JsonHaiku(data)
-h.overview()                                # top-level orientation
-h.describe(path="$[*].room")                # schema of a subtree
-h.enum(path="$[*].session_type.name")       # unique values of a field
+
+h.overview()
+# {"root_kind": "array", "length": 500, "top_keys": ["id", "title", ...], ...}
+
+h.describe(path="$[*].room")
+# {"path": "$[*].room", "schema": "{\"id\": \"integer\", \"name\": ...}"}
+
+h.enum(path="$[*].session_type.name")
+# {"path": ..., "values": ["Symposium", "Workshop", ...], "truncated": false}
+
+h.stats(path="$[*].duration")
+# {"path": ..., "numeric": {"min": 30, "max": 240, "mean": 95, ...}}
+
 h.filter(path="$[*]", where="duration > 60 and room.name == 'HALL H'")
+# {"results": [...], "total_matched": 3, "truncated": false}
+
+h.search(value_contains="Workshop", path="$[*].title")
+# {"results": [{"path": "$[3].title", "value": "Advanced ML Workshop"}, ...]}
+
+h.list_paths(min_depth=1, max_depth=2)
+# ["$[*].id", "$[*].code", "$[*].title", "$[*].room", ...]
+```
+
+The filter DSL is safe by construction — no `eval`, no `exec`. Supports
+`==`, `!=`, `<`, `>`, `in`, `contains`, `and`, `or`.
+
+Interactive REPL from the command line:
+```bash
+$ jsonhaiku shell data.json
+haiku> overview
+haiku> describe $[*].room depth=1
+haiku> enum $[*].session_type.name
+haiku> filter $[*] room.name == 'HALL H'
 ```
 
 ## Positioning
@@ -329,7 +360,7 @@ Actively developed. What's done and what's landing next, roughly in order:
 - [x] More output formats (TypeScript, YAML), content-type detection, and token counting.
 - [x] Enum detection and value statistics.
 - [x] Smart representative sample selection.
-- [ ] A stateful path-scoped API for agent-driven exploration.
+- [x] A stateful path-scoped API for agent-driven exploration.
 - [ ] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.
 - [ ] Streaming support for JSON files that don't fit in memory.
 

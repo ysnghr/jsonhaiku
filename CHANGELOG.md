@@ -13,6 +13,27 @@ deprecation warnings first.
 
 ### Added
 
+- **Progressive disclosure API** via `JsonHaiku(data)`: a stateful explorer
+  for interactive, path-scoped JSON inspection. Seven accessors return
+  compact, LLM-friendly dicts:
+  - `overview()` — root kind, size, top-level keys.
+  - `describe(path, depth)` — inferred schema at any JSONPath.
+  - `sample(path, n)` — representative values at a path.
+  - `enum(path)` — unique values sorted by frequency.
+  - `stats(path)` — numeric/string statistics.
+  - `search(value_contains, path)` — substring search across values.
+  - `filter(path, where)` — safe DSL filter with `and`/`or`, comparison
+    operators, `in`, and `contains`.
+  - `list_paths(min_depth, max_depth)` — enumerate all observed paths.
+- **JSONPath subset** supporting `$`, `.field`, `[N]`, `[*]`.
+- **Safe filter DSL** — recursive-descent parser, no `eval`/`exec`. Supports
+  `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `contains`, `and`, `or`.
+- **Truncation transparency** — every accessor reports when results are
+  trimmed, with total counts alongside returned counts.
+- **Depth control** — uniform `depth` parameter across describe accessors.
+- `jsonhaiku shell data.json` — interactive REPL for exploring payloads.
+- `JsonHaiku` exported from the top-level package.
+
 - **Smart sample selection** via `describe(data, samples=3)`: picks
   representative records covering typical shape, nullable-field variations,
   and extreme outliers rather than naively returning the first N.
