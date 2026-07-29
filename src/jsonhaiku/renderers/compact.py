@@ -65,8 +65,15 @@ def _value(
     if isinstance(node, Primitive):
         return _quote(_display_name(node) + suffix)
     if isinstance(node, ArrayNode):
-        element = "" if node.items is None else _value(
-            node.items, indent, depth=depth, max_depth=max_depth,
+        element = (
+            ""
+            if node.items is None
+            else _value(
+                node.items,
+                indent,
+                depth=depth,
+                max_depth=max_depth,
+            )
         )
         return f"[{element}]{suffix}"
     if isinstance(node, ObjectNode):
@@ -77,8 +84,7 @@ def _value(
         return _quote(scalars + suffix)
     return (
         " | ".join(
-            _union_member(member, depth=depth, max_depth=max_depth)
-            for member in node.members
+            _union_member(member, depth=depth, max_depth=max_depth) for member in node.members
         )
         + suffix
     )
@@ -92,8 +98,11 @@ def _field_value(
 ) -> str:
     """Render a field's value with optional and depth parameters."""
     return _value(
-        field.type, indent,
-        optional=field.optional, depth=depth, max_depth=max_depth,
+        field.type,
+        indent,
+        optional=field.optional,
+        depth=depth,
+        max_depth=max_depth,
     )
 
 
@@ -160,9 +169,7 @@ def _union_member(
 
 def _scalar_union(node: UnionNode) -> str | None:
     """Return the single quoted expression for a scalar-only union, else ``None``."""
-    names = [
-        _display_name(member) for member in node.members if isinstance(member, Primitive)
-    ]
+    names = [_display_name(member) for member in node.members if isinstance(member, Primitive)]
     if len(names) != len(node.members):
         return None
     return " | ".join(names)

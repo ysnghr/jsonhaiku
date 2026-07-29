@@ -13,6 +13,25 @@ deprecation warnings first.
 
 ### Added
 
+- **Four output formats** — each renderer is a pure function over the type tree:
+  - `result.compact` — TypeScript-flavored inline JSON (the default, unchanged).
+  - `result.typescript(root_name="Root")` — full TypeScript interface declarations.
+  - `result.yaml` — YAML type descriptions, cheapest in tokens for nested schemas.
+  - `result.json_schema` — JSON Schema (Draft 2020-12), for Pydantic / OpenAI / Anthropic.
+- `result.render(format, ...)` — explicit format dispatch with aliases (`ts`, `yml`).
+- `Config` dataclass consolidating all rendering knobs:
+  `detect_content_types`, `long_string_threshold`, `long_string_sample_len`, `max_depth`.
+- **Content-type detection** (opt-in via `Config(detect_content_types=True)`):
+  scans string values for HTML, URL, ISO date/datetime, UUID, email, and JWT
+  patterns, emitting specialised type names (`html_string`, `url_string`, etc.).
+  Long strings without a pattern get `"string (len≈N, sample: '...')"`.
+- **Depth control** via `Config(max_depth=N)`: renderers replace subtrees beyond
+  the limit with a compact summary (`{ ... 3 fields, depth 4 }`).
+- **Token counting** behind the `[tokens]` optional extra (`pip install jsonhaiku[tokens]`):
+  `result.token_count()`, `result.token_breakdown()`. Supports GPT-4, GPT-4o,
+  and Anthropic model names (uses `cl100k_base` as a ±10% proxy).
+- CLI gains `--format typescript`, `--format yaml`, `--format json_schema`,
+  `--root-name`, `--detect-content-types`, and `--max-depth` flags.
 - `describe(data)` — the public entry point. Returns a frozen `Result` with
   `.compact` (the LLM-facing type map), `.schema` (JSON Schema Draft 2020-12),
   `.tree` (plain dicts) and `.root` (the type tree).

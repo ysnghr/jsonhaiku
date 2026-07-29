@@ -157,15 +157,17 @@ UUID_STRING = Primitive("uuid_string")
 EMAIL_STRING = Primitive("email_string")
 JWT_STRING = Primitive("jwt_string")
 
-STRING_CONTENT_TYPES: frozenset[PrimitiveName] = frozenset({
-    "html_string",
-    "url_string",
-    "iso_date",
-    "iso_datetime",
-    "uuid_string",
-    "email_string",
-    "jwt_string",
-})
+STRING_CONTENT_TYPES: frozenset[PrimitiveName] = frozenset(
+    {
+        "html_string",
+        "url_string",
+        "iso_date",
+        "iso_datetime",
+        "uuid_string",
+        "email_string",
+        "jwt_string",
+    }
+)
 """Content-type string variant names, for merge and rendering logic."""
 
 ALL_STRING_NAMES: frozenset[PrimitiveName] = STRING_CONTENT_TYPES | {"string"}

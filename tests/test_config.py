@@ -111,7 +111,4 @@ class TestDescribeWithConfig:
         html = Primitive("html_string")
         result = union_of((html, INTEGER))
         assert isinstance(result, UnionNode)
-        assert any(
-            isinstance(m, Primitive) and m.name == "html_string"
-            for m in result.members
-        )
+        assert any(isinstance(m, Primitive) and m.name == "html_string" for m in result.members)

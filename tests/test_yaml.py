@@ -116,17 +116,21 @@ class TestStructuralUnions:
         assert "string" in result
 
     def test_structural_union_in_field(self) -> None:
-        node = ObjectNode({
-            "x": Field(UnionNode((ObjectNode({"a": Field(INTEGER)}), STRING))),
-        })
+        node = ObjectNode(
+            {
+                "x": Field(UnionNode((ObjectNode({"a": Field(INTEGER)}), STRING))),
+            }
+        )
         result = render_yaml(node)
         assert "string" in result
         assert "integer" in result
 
     def test_array_in_union(self) -> None:
-        node = ObjectNode({
-            "x": Field(UnionNode((ArrayNode(INTEGER), NULL))),
-        })
+        node = ObjectNode(
+            {
+                "x": Field(UnionNode((ArrayNode(INTEGER), NULL))),
+            }
+        )
         result = render_yaml(node)
         assert "null" in result
 

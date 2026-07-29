@@ -65,7 +65,9 @@ class Result:
     def typescript(self, root_name: str = "Root") -> str:
         """TypeScript interface declaration."""
         return render_typescript(
-            self.root, root_name=root_name, max_depth=self.config.max_depth,
+            self.root,
+            root_name=root_name,
+            max_depth=self.config.max_depth,
         )
 
     @cached_property
@@ -104,7 +106,9 @@ class Result:
             return render_compact(self.root, max_depth=effective_depth)
         if fmt == "typescript":
             return render_typescript(
-                self.root, root_name=root_name, max_depth=effective_depth,
+                self.root,
+                root_name=root_name,
+                max_depth=effective_depth,
             )
         if fmt == "json_schema":
             schema = render_json_schema(self.root, max_depth=effective_depth)
@@ -165,16 +169,20 @@ class Result:
 
         return {
             "compact": count_tokens(
-                self.render("compact"), model=model,
+                self.render("compact"),
+                model=model,
             ),
             "typescript": count_tokens(
-                self.render("typescript", root_name=root_name), model=model,
+                self.render("typescript", root_name=root_name),
+                model=model,
             ),
             "json_schema": count_tokens(
-                self.render("json_schema"), model=model,
+                self.render("json_schema"),
+                model=model,
             ),
             "yaml": count_tokens(
-                self.render("yaml"), model=model,
+                self.render("yaml"),
+                model=model,
             ),
         }
 

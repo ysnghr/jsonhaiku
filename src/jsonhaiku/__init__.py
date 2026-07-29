@@ -8,10 +8,10 @@ a language model can reason about without ever seeing the raw data.
     from jsonhaiku import describe, Config
 
     result = describe(payload)
-    print(result.compact)       # compact type map
+    print(result.compact)  # compact type map
     print(result.typescript())  # TypeScript interfaces
-    print(result.yaml)          # YAML type description
-    result.json_schema          # JSON Schema dict
+    print(result.yaml)  # YAML type description
+    result.json_schema  # JSON Schema dict
 
     # With content-type detection and depth limiting:
     cfg = Config(detect_content_types=True, max_depth=3)

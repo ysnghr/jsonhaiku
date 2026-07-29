@@ -90,7 +90,6 @@ def _union_with_depth(node: Node, *, depth: int, max_depth: int) -> dict[str, An
         return {"type": names}
     return {
         "anyOf": [
-            _schema_with_depth(member, depth=depth, max_depth=max_depth)
-            for member in node.members
+            _schema_with_depth(member, depth=depth, max_depth=max_depth) for member in node.members
         ],
     }

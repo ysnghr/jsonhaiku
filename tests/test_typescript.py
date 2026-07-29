@@ -103,9 +103,7 @@ class TestUnions:
         assert "number | null" in result
 
     def test_object_and_scalar(self) -> None:
-        result = render_typescript(
-            UnionNode((STRING, ObjectNode({"a": Field(INTEGER)})))
-        )
+        result = render_typescript(UnionNode((STRING, ObjectNode({"a": Field(INTEGER)}))))
         assert "string |" in result
 
 
@@ -135,9 +133,11 @@ class TestInlineObjects:
         assert "{}[]" in result
 
     def test_nested_inline_objects(self) -> None:
-        node = ObjectNode({
-            "a": Field(ObjectNode({"b": Field(ObjectNode({"c": Field(INTEGER)}))})),
-        })
+        node = ObjectNode(
+            {
+                "a": Field(ObjectNode({"b": Field(ObjectNode({"c": Field(INTEGER)}))})),
+            }
+        )
         result = render_typescript(node)
         assert "c: number;" in result
 
@@ -150,16 +150,22 @@ class TestScalarRoot:
 
 class TestInlineContentTypeComments:
     def test_content_type_in_nested_inline(self) -> None:
-        node = ArrayNode(ObjectNode({
-            "bio": Field(Primitive("html_string")),
-        }))
+        node = ArrayNode(
+            ObjectNode(
+                {
+                    "bio": Field(Primitive("html_string")),
+                }
+            )
+        )
         result = render_typescript(node)
         assert "// html" in result
 
     def test_union_content_type_comment(self) -> None:
-        node = ObjectNode({
-            "value": Field(UnionNode((Primitive("html_string"), NULL))),
-        })
+        node = ObjectNode(
+            {
+                "value": Field(UnionNode((Primitive("html_string"), NULL))),
+            }
+        )
         result = render_typescript(node)
         assert "// html" in result
 

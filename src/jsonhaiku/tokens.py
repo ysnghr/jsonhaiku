@@ -13,10 +13,12 @@ from __future__ import annotations
 
 __all__ = ["count_tokens"]
 
-_ANTHROPIC_PREFIXES = frozenset({
-    "claude",
-    "anthropic",
-})
+_ANTHROPIC_PREFIXES = frozenset(
+    {
+        "claude",
+        "anthropic",
+    }
+)
 
 _MODEL_TO_ENCODING: dict[str, str] = {
     "gpt-4": "cl100k_base",

@@ -59,7 +59,8 @@ def test_json_schema(sessions: list[object], snapshot: SnapshotAssertion) -> Non
 
 
 def test_compact_with_content_types(
-    sessions: list[object], snapshot: SnapshotAssertion,
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
 ) -> None:
     cfg = Config(detect_content_types=True)
     assert describe(sessions, config=cfg).compact == snapshot

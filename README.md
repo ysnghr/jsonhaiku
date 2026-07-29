@@ -87,17 +87,23 @@ from jsonhaiku import describe
 
 result = describe(data)
 
-result.compact   # str  — the TypeScript-flavored type map (default rendering)
-result.schema    # dict — JSON Schema (Draft 2020-12)
-result.tree      # dict — the type tree as plain dicts, for your own tooling
-result.root      # the type tree itself, if you want to walk it
+result.compact          # str  — the TypeScript-flavored type map (default)
+result.typescript()     # str  — TypeScript interfaces
+result.yaml             # str  — YAML type description
+result.json_schema      # dict — JSON Schema (Draft 2020-12)
+result.schema           # dict — alias for json_schema
+result.tree             # dict — the type tree as plain dicts
+result.root             # the internal type tree, for advanced use
 ```
 
 `print(result)` gives you the compact rendering, so it drops straight into an
 f-string in a prompt.
 
-Describing a list of records merges every observation into one shape:
+### Output formats
 
+jsonhaiku renders to four formats. Each addresses a different use case:
+
+**compact** — the default. TypeScript-flavored inline JSON.
 ```python
 >>> print(describe([{"id": 1, "name": "a"}, {"id": 2, "name": None}]))
 [{
@@ -106,7 +112,77 @@ Describing a list of records merges every observation into one shape:
 }]
 ```
 
-A few rules worth knowing:
+**typescript** — full TypeScript interfaces. Best-in-class for GPT-4 and Claude.
+```python
+>>> print(result.typescript(root_name="Session"))
+interface Session {
+  id: number;
+  name: string | null;
+}
+```
+
+**yaml** — YAML type description. Cheapest in tokens for deeply nested schemas.
+```python
+>>> print(result.yaml)
+id: integer
+name: string | null
+```
+
+**json_schema** — Standard JSON Schema (Draft 2020-12). For Pydantic, OpenAI
+structured outputs, Anthropic tool schemas.
+```python
+>>> import json
+>>> print(json.dumps(result.json_schema, indent=2))
+```
+
+Use `result.render(format, ...)` for explicit format selection:
+```python
+result.render("typescript", root_name="Session")
+result.render("yaml")
+```
+
+### Content-type detection
+
+Opt-in scanning recognises common string patterns:
+
+```python
+from jsonhaiku import describe, Config
+
+cfg = Config(detect_content_types=True)
+result = describe(data, config=cfg)
+```
+
+This detects HTML, URLs, ISO dates, UUIDs, emails, and JWTs — emitting
+`html_string`, `url_string`, `iso_datetime`, etc. instead of plain `string`.
+Long strings without a pattern get a length and sample annotation:
+`"string (len≈523, sample: 'The quick brown fox…')"`.
+
+### Depth control
+
+Truncate deeply nested schemas:
+
+```python
+result = describe(data, config=Config(max_depth=2))
+# At max_depth, objects become: { ... 3 fields, depth 4 }
+```
+
+### Token counting
+
+Compare how many tokens each format costs:
+
+```python
+pip install "jsonhaiku[tokens]"   # pulls in tiktoken
+```
+
+```python
+result.token_count()                       # compact form, gpt-4 encoding
+result.token_count(model="claude-3-5")     # Anthropic estimate (±10%)
+result.token_count(fmt="typescript")       # count for a specific format
+result.token_breakdown()                   # all four formats side by side
+# {"compact": 412, "typescript": 385, "json_schema": 891, "yaml": 361}
+```
+
+### Rules worth knowing
 
 - `"string | null"` — the value was sometimes null. `"string | undefined"` — the
   key was sometimes missing. Different facts, never conflated.
@@ -122,8 +198,10 @@ A few rules worth knowing:
 
 ```bash
 curl -s https://api.example.com/sessions | jsonhaiku
-jsonhaiku response.json --format schema
-jsonhaiku response.json --format tree
+jsonhaiku response.json --format typescript --root-name Session
+jsonhaiku response.json --format yaml
+jsonhaiku response.json --format json_schema
+jsonhaiku response.json --detect-content-types --max-depth 3
 ```
 
 ### Planned API
@@ -131,10 +209,7 @@ jsonhaiku response.json --format tree
 Not built yet — see the roadmap below:
 
 ```python
-result.typescript()       # str  — full TS interfaces
-result.yaml               # str  — YAML rendering
 result.samples            # list — smart-selected representative records
-result.token_count()      # int  — tokens for the compact form (requires `tiktoken`)
 ```
 
 For agentic exploration of large payloads, a stateful interface with path-scoped access:
@@ -160,7 +235,7 @@ h.filter(path="$[*]", where="duration > 60 and room.name == 'HALL H'")
 Actively developed. What's done and what's landing next, roughly in order:
 
 - [x] The core `describe()` API, compact rendering, JSON Schema, and a CLI.
-- [ ] More output formats (TypeScript, YAML) and token counting.
+- [x] More output formats (TypeScript, YAML), content-type detection, and token counting.
 - [ ] Enum detection and value statistics.
 - [ ] Smart representative sample selection.
 - [ ] A stateful path-scoped API for agent-driven exploration.

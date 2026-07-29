@@ -118,7 +118,8 @@ def _array(
         first = first.lstrip()
         rest_lines = [
             f"{indent}  {line.removeprefix(inner_indent)}"
-            if line.startswith(inner_indent) else line
+            if line.startswith(inner_indent)
+            else line
             for line in rest
         ]
         result = prefix + first
@@ -145,8 +146,7 @@ def _union(
         return " | ".join(names)
 
     parts = [
-        _value(member, depth=depth, max_depth=max_depth, inline=True)
-        for member in node.members
+        _value(member, depth=depth, max_depth=max_depth, inline=True) for member in node.members
     ]
 
     result = " | ".join(p.strip() for p in parts)

@@ -51,11 +51,17 @@ class TestCompactDepth:
         assert "..." in result
 
     def test_summary_with_union_subtree(self) -> None:
-        node = ObjectNode({
-            "x": Field(ObjectNode({
-                "a": Field(UnionNode((INTEGER, ObjectNode({"deep": Field(STRING)})))),
-            })),
-        })
+        node = ObjectNode(
+            {
+                "x": Field(
+                    ObjectNode(
+                        {
+                            "a": Field(UnionNode((INTEGER, ObjectNode({"deep": Field(STRING)})))),
+                        }
+                    )
+                ),
+            }
+        )
         result = render_compact(node, max_depth=1)
         assert "..." in result
 
@@ -103,9 +109,11 @@ class TestJsonSchemaDepthFull:
         assert result["properties"]["x"]["type"] == ["string", "null"]
 
     def test_union_structural_at_depth(self) -> None:
-        node = ObjectNode({
-            "x": Field(UnionNode((STRING, ObjectNode({"a": Field(INTEGER)})))),
-        })
+        node = ObjectNode(
+            {
+                "x": Field(UnionNode((STRING, ObjectNode({"a": Field(INTEGER)})))),
+            }
+        )
         result = render_json_schema(node, max_depth=5)
         assert "anyOf" in result["properties"]["x"]
 
