@@ -66,6 +66,38 @@ def test_compact_with_content_types(
     assert describe(sessions, config=cfg).compact == snapshot
 
 
+def test_compact_with_cardinality(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    cfg = Config(track_cardinality=True, enum_cardinality_ratio=1.0)
+    assert describe(sessions, config=cfg).compact == snapshot
+
+
+def test_typescript_with_cardinality(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    cfg = Config(track_cardinality=True, enum_cardinality_ratio=1.0)
+    assert describe(sessions, config=cfg).typescript() == snapshot
+
+
+def test_yaml_with_cardinality(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    cfg = Config(track_cardinality=True, enum_cardinality_ratio=1.0)
+    assert describe(sessions, config=cfg).yaml == snapshot
+
+
+def test_json_schema_with_cardinality(
+    sessions: list[object],
+    snapshot: SnapshotAssertion,
+) -> None:
+    cfg = Config(track_cardinality=True, enum_cardinality_ratio=1.0)
+    assert describe(sessions, config=cfg).json_schema == snapshot
+
+
 def test_description_size_does_not_grow_with_the_payload(sessions: list[object]) -> None:
     """The whole point: description size tracks the *shape*, not the record count.
 

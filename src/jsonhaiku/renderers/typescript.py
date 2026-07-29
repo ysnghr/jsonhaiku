@@ -41,6 +41,9 @@ _TS_TYPE_MAP: dict[str, str] = {
     "number": "number",
     "string": "string",
     "unknown": "unknown",
+    "always_null": "null",
+    "always_empty_array": "never[]",
+    "always_empty_object": "Record<string, never>",
 }
 
 _CONTENT_TYPE_COMMENTS: dict[str, str] = {

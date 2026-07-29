@@ -38,6 +38,45 @@
   }]
   '''
 # ---
+# name: test_compact_with_cardinality
+  '''
+  [{
+    "code": "enum('S-101' | 'S-102' | 'S-103' | 'S-104' | 'S-105')",
+    "content": {
+      "internal_comment": "always_null",
+      "outline": "enum('<p>A survey of the field, with pointers to open problems.</p>' | '<p>Hands-on session. Bring a laptop.</p>' | '<p>Informal.</p>' | '<p>Thanks, and see you next year.</p>' | null)"
+    },
+    "day": {
+      "date": "enum('2026-05-04' | '2026-05-05' | '2026-05-06')",
+      "day_name": "enum('Monday' | 'Tuesday' | 'Wednesday')",
+      "id": "enum(1 | 2 | 3)"
+    },
+    "duration": "number (min=30, max=240, mean=105.10)",
+    "id": "enum(101 | 102 | 103 | 104 | 105)",
+    "is_published": "boolean",
+    "livestream_url": "enum('https://example.org/live/104') | undefined",
+    "order": "always_null",
+    "parent_id": "enum(103 | null)",
+    "room": {
+      "capacity": "enum(120 | 200 | 800)",
+      "id": "enum(1 | 2 | 3)",
+      "name": "enum('HALL A' | 'HALL B' | 'HALL C')"
+    },
+    "session_type": {
+      "id": "enum(1 | 2 | 3 | 4)",
+      "name": "enum('Plenary' | 'Special Interest' | 'Symposium' | 'Workshop')"
+    },
+    "speakers": [{
+      "affiliation": "enum('Independent' | 'Institute of Fine Structures' | 'Northfield University' | null)",
+      "id": "enum(11 | 12 | 13 | 14)",
+      "name": "enum('A. Rivera' | 'B. Okonkwo' | 'C. Lindqvist' | 'D. Ferreira')"
+    }],
+    "tags": ["enum('closing' | 'hands-on' | 'informal' | 'keynote' | 'lunch' | 'overview')"],
+    "technical_equipment": "always_null",
+    "title": "enum('Closing Remarks' | 'Opening Plenary: The State of Inference' | 'Special Interest: Tokenizer Trivia' | 'Symposium: Schema Drift' | 'Workshop: Streaming Parsers in Practice')"
+  }]
+  '''
+# ---
 # name: test_compact_with_content_types
   '''
   [{
@@ -212,6 +251,268 @@
           'type': 'null',
         }),
         'title': dict({
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'code',
+        'content',
+        'day',
+        'duration',
+        'id',
+        'is_published',
+        'order',
+        'parent_id',
+        'room',
+        'session_type',
+        'speakers',
+        'tags',
+        'technical_equipment',
+        'title',
+      ]),
+      'type': 'object',
+    }),
+    'type': 'array',
+  })
+# ---
+# name: test_json_schema_with_cardinality
+  dict({
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'items': dict({
+      'properties': dict({
+        'code': dict({
+          'enum': list([
+            'S-101',
+            'S-102',
+            'S-103',
+            'S-104',
+            'S-105',
+          ]),
+          'type': 'string',
+        }),
+        'content': dict({
+          'properties': dict({
+            'internal_comment': dict({
+              'type': 'null',
+            }),
+            'outline': dict({
+              'enum': list([
+                '<p>A survey of the field, with pointers to open problems.</p>',
+                '<p>Hands-on session. Bring a laptop.</p>',
+                '<p>Informal.</p>',
+                '<p>Thanks, and see you next year.</p>',
+                None,
+              ]),
+              'type': list([
+                'null',
+                'string',
+              ]),
+            }),
+          }),
+          'required': list([
+            'internal_comment',
+            'outline',
+          ]),
+          'type': 'object',
+        }),
+        'day': dict({
+          'properties': dict({
+            'date': dict({
+              'enum': list([
+                '2026-05-04',
+                '2026-05-05',
+                '2026-05-06',
+              ]),
+              'type': 'string',
+            }),
+            'day_name': dict({
+              'enum': list([
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+              ]),
+              'type': 'string',
+            }),
+            'id': dict({
+              'enum': list([
+                1,
+                2,
+                3,
+              ]),
+              'type': 'integer',
+            }),
+          }),
+          'required': list([
+            'date',
+            'day_name',
+            'id',
+          ]),
+          'type': 'object',
+        }),
+        'duration': dict({
+          'type': 'number',
+        }),
+        'id': dict({
+          'enum': list([
+            101,
+            102,
+            103,
+            104,
+            105,
+          ]),
+          'type': 'integer',
+        }),
+        'is_published': dict({
+          'type': 'boolean',
+        }),
+        'livestream_url': dict({
+          'enum': list([
+            'https://example.org/live/104',
+          ]),
+          'type': 'string',
+        }),
+        'order': dict({
+          'type': 'null',
+        }),
+        'parent_id': dict({
+          'enum': list([
+            103,
+            None,
+          ]),
+          'type': list([
+            'integer',
+            'null',
+          ]),
+        }),
+        'room': dict({
+          'properties': dict({
+            'capacity': dict({
+              'enum': list([
+                120,
+                200,
+                800,
+              ]),
+              'type': 'integer',
+            }),
+            'id': dict({
+              'enum': list([
+                1,
+                2,
+                3,
+              ]),
+              'type': 'integer',
+            }),
+            'name': dict({
+              'enum': list([
+                'HALL A',
+                'HALL B',
+                'HALL C',
+              ]),
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'capacity',
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'session_type': dict({
+          'properties': dict({
+            'id': dict({
+              'enum': list([
+                1,
+                2,
+                3,
+                4,
+              ]),
+              'type': 'integer',
+            }),
+            'name': dict({
+              'enum': list([
+                'Plenary',
+                'Special Interest',
+                'Symposium',
+                'Workshop',
+              ]),
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'speakers': dict({
+          'items': dict({
+            'properties': dict({
+              'affiliation': dict({
+                'enum': list([
+                  'Independent',
+                  'Institute of Fine Structures',
+                  'Northfield University',
+                  None,
+                ]),
+                'type': list([
+                  'null',
+                  'string',
+                ]),
+              }),
+              'id': dict({
+                'enum': list([
+                  11,
+                  12,
+                  13,
+                  14,
+                ]),
+                'type': 'integer',
+              }),
+              'name': dict({
+                'enum': list([
+                  'A. Rivera',
+                  'B. Okonkwo',
+                  'C. Lindqvist',
+                  'D. Ferreira',
+                ]),
+                'type': 'string',
+              }),
+            }),
+            'required': list([
+              'affiliation',
+              'id',
+              'name',
+            ]),
+            'type': 'object',
+          }),
+          'type': 'array',
+        }),
+        'tags': dict({
+          'items': dict({
+            'enum': list([
+              'closing',
+              'hands-on',
+              'informal',
+              'keynote',
+              'lunch',
+              'overview',
+            ]),
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'technical_equipment': dict({
+          'type': 'null',
+        }),
+        'title': dict({
+          'enum': list([
+            'Closing Remarks',
+            'Opening Plenary: The State of Inference',
+            'Special Interest: Tokenizer Trivia',
+            'Symposium: Schema Drift',
+            'Workshop: Streaming Parsers in Practice',
+          ]),
           'type': 'string',
         }),
       }),
@@ -678,6 +979,45 @@
   })[];
   '''
 # ---
+# name: test_typescript_with_cardinality
+  '''
+  type Root = ({
+    code: 'S-101' | 'S-102' | 'S-103' | 'S-104' | 'S-105';
+    content: {
+      internal_comment: null;
+      outline: '<p>A survey of the field, with pointers to open problems.</p>' | '<p>Hands-on session. Bring a laptop.</p>' | '<p>Informal.</p>' | '<p>Thanks, and see you next year.</p>' | null;
+    };
+    day: {
+      date: '2026-05-04' | '2026-05-05' | '2026-05-06';
+      day_name: 'Monday' | 'Tuesday' | 'Wednesday';
+      id: 1 | 2 | 3;
+    };
+    duration: number;
+    id: 101 | 102 | 103 | 104 | 105;
+    is_published: boolean;
+    livestream_url?: 'https://example.org/live/104';
+    order: null;
+    parent_id: 103 | null;
+    room: {
+      capacity: 120 | 200 | 800;
+      id: 1 | 2 | 3;
+      name: 'HALL A' | 'HALL B' | 'HALL C';
+    };
+    session_type: {
+      id: 1 | 2 | 3 | 4;
+      name: 'Plenary' | 'Special Interest' | 'Symposium' | 'Workshop';
+    };
+    speakers: ({
+      affiliation: 'Independent' | 'Institute of Fine Structures' | 'Northfield University' | null;
+      id: 11 | 12 | 13 | 14;
+      name: 'A. Rivera' | 'B. Okonkwo' | 'C. Lindqvist' | 'D. Ferreira';
+    })[];
+    tags: ('closing' | 'hands-on' | 'informal' | 'keynote' | 'lunch' | 'overview')[];
+    technical_equipment: null;
+    title: 'Closing Remarks' | 'Opening Plenary: The State of Inference' | 'Special Interest: Tokenizer Trivia' | 'Symposium: Schema Drift' | 'Workshop: Streaming Parsers in Practice';
+  })[];
+  '''
+# ---
 # name: test_yaml
   '''
   - code: string
@@ -708,5 +1048,37 @@
     tags:     - string
     technical_equipment: null
     title: string
+  '''
+# ---
+# name: test_yaml_with_cardinality
+  '''
+  - code: enum(S-101 | S-102 | S-103 | S-104 | S-105)
+    content:
+      internal_comment: always_null
+      outline: enum(<p>A survey of the field, with pointers to open problems.</p> | <p>Hands-on session. Bring a laptop.</p> | <p>Informal.</p> | <p>Thanks, and see you next year.</p> | null)
+    day:
+      date: enum(2026-05-04 | 2026-05-05 | 2026-05-06)
+      day_name: enum(Monday | Tuesday | Wednesday)
+      id: enum(1 | 2 | 3)
+    duration: number (min=30, max=240, mean=105.10)
+    id: enum(101 | 102 | 103 | 104 | 105)
+    is_published: boolean
+    livestream_url?: enum(https://example.org/live/104)
+    order: always_null
+    parent_id: enum(103 | null)
+    room:
+      capacity: enum(120 | 200 | 800)
+      id: enum(1 | 2 | 3)
+      name: enum(HALL A | HALL B | HALL C)
+    session_type:
+      id: enum(1 | 2 | 3 | 4)
+      name: enum(Plenary | Special Interest | Symposium | Workshop)
+    speakers:
+      - affiliation: enum(Independent | Institute of Fine Structures | Northfield University | null)
+        id: enum(11 | 12 | 13 | 14)
+        name: enum(A. Rivera | B. Okonkwo | C. Lindqvist | D. Ferreira)
+    tags:     - enum(closing | hands-on | informal | keynote | lunch | overview)
+    technical_equipment: always_null
+    title: enum(Closing Remarks | Opening Plenary: The State of Inference | Special Interest: Tokenizer Trivia | Symposium: Schema Drift | Workshop: Streaming Parsers in Practice)
   '''
 # ---
