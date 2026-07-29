@@ -3,6 +3,15 @@
 from __future__ import annotations
 
 from jsonhaiku.core import infer
+from jsonhaiku.nodes import (
+    INTEGER,
+    NULL,
+    STRING,
+    ArrayNode,
+    Field,
+    ObjectNode,
+    UnionNode,
+)
 from jsonhaiku.renderers.compact import render_compact
 from jsonhaiku.renderers.json_schema import render_json_schema
 from jsonhaiku.renderers.typescript import render_typescript
@@ -36,6 +45,25 @@ class TestCompactDepth:
         result = render_compact(infer(data), max_depth=1)
         assert "3 fields" in result
 
+    def test_summary_with_array_subtree(self) -> None:
+        data = {"items": {"list": [{"deep": 1}]}}
+        result = render_compact(infer(data), max_depth=1)
+        assert "..." in result
+
+    def test_summary_with_union_subtree(self) -> None:
+        node = ObjectNode({
+            "x": Field(ObjectNode({
+                "a": Field(UnionNode((INTEGER, ObjectNode({"deep": Field(STRING)})))),
+            })),
+        })
+        result = render_compact(node, max_depth=1)
+        assert "..." in result
+
+    def test_summary_with_empty_object(self) -> None:
+        data = {"wrapper": {"empty": {}}}
+        result = render_compact(infer(data), max_depth=1)
+        assert "..." in result
+
 
 class TestTypescriptDepth:
     def test_depth_truncation(self) -> None:
@@ -54,6 +82,47 @@ class TestJsonSchemaDepth:
         result = render_json_schema(infer(NESTED))
         deep = result["properties"]["level1"]["properties"]["level2"]
         assert "properties" in deep
+
+
+class TestJsonSchemaDepthFull:
+    def test_scalar_at_depth(self) -> None:
+        result = render_json_schema(infer({"x": 1}), max_depth=5)
+        assert result["properties"]["x"] == {"type": "integer"}
+
+    def test_array_at_depth(self) -> None:
+        result = render_json_schema(infer({"items": [1]}), max_depth=5)
+        assert result["properties"]["items"]["items"] == {"type": "integer"}
+
+    def test_empty_array_at_depth(self) -> None:
+        result = render_json_schema(infer({"items": []}), max_depth=5)
+        assert result["properties"]["items"] == {"type": "array"}
+
+    def test_union_scalar_at_depth(self) -> None:
+        node = ObjectNode({"x": Field(UnionNode((STRING, NULL)))})
+        result = render_json_schema(node, max_depth=5)
+        assert result["properties"]["x"]["type"] == ["string", "null"]
+
+    def test_union_structural_at_depth(self) -> None:
+        node = ObjectNode({
+            "x": Field(UnionNode((STRING, ObjectNode({"a": Field(INTEGER)})))),
+        })
+        result = render_json_schema(node, max_depth=5)
+        assert "anyOf" in result["properties"]["x"]
+
+    def test_empty_object_at_depth(self) -> None:
+        node = ObjectNode({"x": Field(ObjectNode({}))})
+        result = render_json_schema(node, max_depth=5)
+        assert result["properties"]["x"] == {"type": "object"}
+
+    def test_required_fields_at_depth(self) -> None:
+        result = render_json_schema(infer({"a": 1, "b": 2}), max_depth=5)
+        assert "required" in result
+        assert sorted(result["required"]) == ["a", "b"]
+
+    def test_optional_fields_not_required(self) -> None:
+        node = ObjectNode({"a": Field(INTEGER, optional=True)})
+        result = render_json_schema(node, max_depth=5)
+        assert "required" not in result
 
 
 class TestYamlDepth:

@@ -34,6 +34,19 @@ class TestTokenCount:
         assert count > 0
 
 
+class TestTokenResolution:
+    def test_unknown_model_falls_back(self) -> None:
+        result = describe({"id": 1})
+        count = result.token_count(model="nonexistent-model-xyz")
+        assert isinstance(count, int)
+        assert count > 0
+
+    def test_gpt4o_encoding(self) -> None:
+        result = describe({"id": 1})
+        count = result.token_count(model="gpt-4o")
+        assert isinstance(count, int)
+
+
 class TestTokenBreakdown:
     def test_returns_all_four_formats(self) -> None:
         result = describe({"id": 1, "name": "test"})

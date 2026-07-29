@@ -128,6 +128,42 @@ class TestContentTypeComments:
         assert "// url" in result
 
 
+class TestInlineObjects:
+    def test_empty_inline_object(self) -> None:
+        node = ArrayNode(ObjectNode({}))
+        result = render_typescript(node)
+        assert "{}[]" in result
+
+    def test_nested_inline_objects(self) -> None:
+        node = ObjectNode({
+            "a": Field(ObjectNode({"b": Field(ObjectNode({"c": Field(INTEGER)}))})),
+        })
+        result = render_typescript(node)
+        assert "c: number;" in result
+
+
+class TestScalarRoot:
+    def test_scalar_type_alias(self) -> None:
+        result = render_typescript(STRING)
+        assert result == "type Root = string;"
+
+
+class TestInlineContentTypeComments:
+    def test_content_type_in_nested_inline(self) -> None:
+        node = ArrayNode(ObjectNode({
+            "bio": Field(Primitive("html_string")),
+        }))
+        result = render_typescript(node)
+        assert "// html" in result
+
+    def test_union_content_type_comment(self) -> None:
+        node = ObjectNode({
+            "value": Field(UnionNode((Primitive("html_string"), NULL))),
+        })
+        result = render_typescript(node)
+        assert "// html" in result
+
+
 class TestDeterminism:
     def test_repeated_rendering_is_byte_identical(self) -> None:
         value = {"b": [1, None], "a": {"z": True, "y": "x"}}

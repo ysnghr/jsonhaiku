@@ -98,6 +98,52 @@ class TestContentTypes:
         result = render_yaml(Primitive("html_string"))
         assert result == "html_string"
 
+    def test_long_string_meta(self) -> None:
+        node = Primitive("string", string_meta="len≈500, sample: 'hello…'")
+        result = render_yaml(node)
+        assert "len≈500" in result
+
+
+class TestStructuralUnions:
+    def test_nullable_object(self) -> None:
+        node = UnionNode((ObjectNode({"id": Field(INTEGER)}), NULL))
+        result = render_yaml(node)
+        assert "null" in result
+
+    def test_object_and_scalar(self) -> None:
+        node = UnionNode((STRING, ObjectNode({"a": Field(INTEGER)})))
+        result = render_yaml(node)
+        assert "string" in result
+
+    def test_structural_union_in_field(self) -> None:
+        node = ObjectNode({
+            "x": Field(UnionNode((ObjectNode({"a": Field(INTEGER)}), STRING))),
+        })
+        result = render_yaml(node)
+        assert "string" in result
+        assert "integer" in result
+
+    def test_array_in_union(self) -> None:
+        node = ObjectNode({
+            "x": Field(UnionNode((ArrayNode(INTEGER), NULL))),
+        })
+        result = render_yaml(node)
+        assert "null" in result
+
+
+class TestSpecialKeys:
+    def test_key_with_colon(self) -> None:
+        result = render({"a:b": 1})
+        assert '"a:b"' in result
+
+    def test_key_with_hash(self) -> None:
+        result = render({"a#b": 1})
+        assert '"a#b"' in result
+
+    def test_key_starting_with_dash(self) -> None:
+        result = render({"-key": 1})
+        assert '"-key"' in result
+
 
 class TestDeterminism:
     def test_repeated_rendering_is_byte_identical(self) -> None:

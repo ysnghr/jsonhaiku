@@ -70,6 +70,32 @@ class TestFormats:
         assert main(["-f", "tree", "--indent", "0"]) == 0
         assert '\n"kind"' in capsys.readouterr().out
 
+    def test_typescript_format(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--format", "typescript"]) == 0
+        out = capsys.readouterr().out
+        assert "interface" in out or "type" in out
+
+    def test_yaml_format(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--format", "yaml"]) == 0
+        out = capsys.readouterr().out
+        assert "integer" in out
+
+    def test_json_schema_format(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--format", "json_schema"]) == 0
+        document = json.loads(capsys.readouterr().out)
+        assert "$schema" in document
+
+    def test_typescript_with_root_name(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["--format", "typescript", "--root-name", "Session"]) == 0
+        out = capsys.readouterr().out
+        assert "Session" in out
+
+    def test_detect_content_types_flag(self) -> None:
+        assert main(["--detect-content-types"]) == 0
+
+    def test_max_depth_flag(self) -> None:
+        assert main(["--max-depth", "1"]) == 0
+
 
 class TestFailures:
     def test_invalid_json_reports_and_exits_nonzero(
