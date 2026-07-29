@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from jsonhaiku import describe
+from jsonhaiku import Config, describe
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
@@ -44,6 +44,25 @@ def test_schema(sessions: list[object], snapshot: SnapshotAssertion) -> None:
 
 def test_tree(sessions: list[object], snapshot: SnapshotAssertion) -> None:
     assert describe(sessions).tree == snapshot
+
+
+def test_typescript(sessions: list[object], snapshot: SnapshotAssertion) -> None:
+    assert describe(sessions).typescript() == snapshot
+
+
+def test_yaml(sessions: list[object], snapshot: SnapshotAssertion) -> None:
+    assert describe(sessions).yaml == snapshot
+
+
+def test_json_schema(sessions: list[object], snapshot: SnapshotAssertion) -> None:
+    assert describe(sessions).json_schema == snapshot
+
+
+def test_compact_with_content_types(
+    sessions: list[object], snapshot: SnapshotAssertion,
+) -> None:
+    cfg = Config(detect_content_types=True)
+    assert describe(sessions, config=cfg).compact == snapshot
 
 
 def test_description_size_does_not_grow_with_the_payload(sessions: list[object]) -> None:

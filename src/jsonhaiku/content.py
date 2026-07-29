@@ -35,7 +35,7 @@ _UUID_RE = re.compile(
     re.IGNORECASE,
 )
 _EMAIL_RE = re.compile(r"^.+@.+\..+$")
-_JWT_RE = re.compile(r"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$")
+_JWT_RE = re.compile(r"^[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}$")
 
 _DETECTORS: list[tuple[re.Pattern[str], Primitive]] = [
     (_HTML_RE, HTML_STRING),

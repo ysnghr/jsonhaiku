@@ -72,6 +72,8 @@ def render_typescript(
     if isinstance(node, ArrayNode):
         items = node.items
         element_ts = _type_expr(items, depth=0, max_depth=max_depth) if items else "unknown"
+        if " | " in element_ts:
+            return f"type {root_name} = ({element_ts})[];"
         return f"type {root_name} = {element_ts}[];"
     return f"type {root_name} = {_type_expr(node, depth=0, max_depth=max_depth)};"
 

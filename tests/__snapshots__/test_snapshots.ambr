@@ -38,6 +38,204 @@
   }]
   '''
 # ---
+# name: test_compact_with_content_types
+  '''
+  [{
+    "code": "string",
+    "content": {
+      "internal_comment": "null",
+      "outline": "html_string | null"
+    },
+    "day": {
+      "date": "iso_date",
+      "day_name": "string",
+      "id": "integer"
+    },
+    "duration": "number",
+    "id": "integer",
+    "is_published": "boolean",
+    "livestream_url": "url_string | undefined",
+    "order": "null",
+    "parent_id": "integer | null",
+    "room": {
+      "capacity": "integer",
+      "id": "integer",
+      "name": "string"
+    },
+    "session_type": {
+      "id": "integer",
+      "name": "string"
+    },
+    "speakers": [{
+      "affiliation": "string | null",
+      "id": "integer",
+      "name": "string"
+    }],
+    "tags": ["string"],
+    "technical_equipment": "null",
+    "title": "string"
+  }]
+  '''
+# ---
+# name: test_json_schema
+  dict({
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'items': dict({
+      'properties': dict({
+        'code': dict({
+          'type': 'string',
+        }),
+        'content': dict({
+          'properties': dict({
+            'internal_comment': dict({
+              'type': 'null',
+            }),
+            'outline': dict({
+              'type': list([
+                'string',
+                'null',
+              ]),
+            }),
+          }),
+          'required': list([
+            'internal_comment',
+            'outline',
+          ]),
+          'type': 'object',
+        }),
+        'day': dict({
+          'properties': dict({
+            'date': dict({
+              'type': 'string',
+            }),
+            'day_name': dict({
+              'type': 'string',
+            }),
+            'id': dict({
+              'type': 'integer',
+            }),
+          }),
+          'required': list([
+            'date',
+            'day_name',
+            'id',
+          ]),
+          'type': 'object',
+        }),
+        'duration': dict({
+          'type': 'number',
+        }),
+        'id': dict({
+          'type': 'integer',
+        }),
+        'is_published': dict({
+          'type': 'boolean',
+        }),
+        'livestream_url': dict({
+          'type': 'string',
+        }),
+        'order': dict({
+          'type': 'null',
+        }),
+        'parent_id': dict({
+          'type': list([
+            'integer',
+            'null',
+          ]),
+        }),
+        'room': dict({
+          'properties': dict({
+            'capacity': dict({
+              'type': 'integer',
+            }),
+            'id': dict({
+              'type': 'integer',
+            }),
+            'name': dict({
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'capacity',
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'session_type': dict({
+          'properties': dict({
+            'id': dict({
+              'type': 'integer',
+            }),
+            'name': dict({
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'id',
+            'name',
+          ]),
+          'type': 'object',
+        }),
+        'speakers': dict({
+          'items': dict({
+            'properties': dict({
+              'affiliation': dict({
+                'type': list([
+                  'string',
+                  'null',
+                ]),
+              }),
+              'id': dict({
+                'type': 'integer',
+              }),
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'required': list([
+              'affiliation',
+              'id',
+              'name',
+            ]),
+            'type': 'object',
+          }),
+          'type': 'array',
+        }),
+        'tags': dict({
+          'items': dict({
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'technical_equipment': dict({
+          'type': 'null',
+        }),
+        'title': dict({
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'code',
+        'content',
+        'day',
+        'duration',
+        'id',
+        'is_published',
+        'order',
+        'parent_id',
+        'room',
+        'session_type',
+        'speakers',
+        'tags',
+        'technical_equipment',
+        'title',
+      ]),
+      'type': 'object',
+    }),
+    'type': 'array',
+  })
+# ---
 # name: test_schema
   dict({
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
@@ -440,4 +638,75 @@
     }),
     'kind': 'array',
   })
+# ---
+# name: test_typescript
+  '''
+  type Root = ({
+    code: string;
+    content: {
+      internal_comment: null;
+      outline: string | null;
+    };
+    day: {
+      date: string;
+      day_name: string;
+      id: number;
+    };
+    duration: number;
+    id: number;
+    is_published: boolean;
+    livestream_url?: string;
+    order: null;
+    parent_id: number | null;
+    room: {
+      capacity: number;
+      id: number;
+      name: string;
+    };
+    session_type: {
+      id: number;
+      name: string;
+    };
+    speakers: ({
+      affiliation: string | null;
+      id: number;
+      name: string;
+    })[];
+    tags: string[];
+    technical_equipment: null;
+    title: string;
+  })[];
+  '''
+# ---
+# name: test_yaml
+  '''
+  - code: string
+    content:
+      internal_comment: null
+      outline: string | null
+    day:
+      date: string
+      day_name: string
+      id: integer
+    duration: number
+    id: integer
+    is_published: boolean
+    livestream_url?: string
+    order: null
+    parent_id: integer | null
+    room:
+      capacity: integer
+      id: integer
+      name: string
+    session_type:
+      id: integer
+      name: string
+    speakers:
+      - affiliation: string | null
+        id: integer
+        name: string
+    tags:     - string
+    technical_equipment: null
+    title: string
+  '''
 # ---
