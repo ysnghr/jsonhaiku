@@ -331,7 +331,10 @@ def _diversity_check(chosen: list[Sample], records: list[object]) -> list[Sample
             if sim > _DIVERSITY_THRESHOLD:
                 used = {_index_from_path(s.path) for s in result}
                 replacement = _pick_filler(records, used)
-                if replacement is not None:
+                if replacement is None:
+                    continue
+                new_sim = _jaccard_similarity(result[i].value, replacement.value)
+                if new_sim < sim:
                     result[j] = replacement
 
     return result
