@@ -60,7 +60,7 @@ class TestCompactDepth:
         assert "..." in result
 
     def test_summary_with_empty_object(self) -> None:
-        data = {"wrapper": {"empty": {}}}
+        data: dict[str, object] = {"wrapper": {"empty": {}}}
         result = render_compact(infer(data), max_depth=1)
         assert "..." in result
 

@@ -46,9 +46,7 @@ def _schema_with_depth(node: Node, *, depth: int, max_depth: int) -> dict[str, A
         return {"type": "array", "items": items}
     if isinstance(node, ObjectNode):
         return _object_with_depth(node, depth=depth, max_depth=max_depth)
-    if isinstance(node, UnionNode):
-        return _union_with_depth(node, depth=depth, max_depth=max_depth)
-    return {}  # pragma: no cover
+    return _union_with_depth(node, depth=depth, max_depth=max_depth)
 
 
 def _object_with_depth(node: Node, *, depth: int, max_depth: int) -> dict[str, Any]:

@@ -116,7 +116,11 @@ def infer(value: object, *, config: Config | None = None) -> Node:
         return NULL
     for python_type, scalar in _SCALAR_TYPES:
         if isinstance(value, python_type):
-            if python_type is str and config is not None and config.detect_content_types:
+            if (
+                isinstance(value, str)
+                and config is not None
+                and config.detect_content_types
+            ):
                 from jsonhaiku.content import classify_string  # noqa: PLC0415
 
                 return classify_string(

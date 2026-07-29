@@ -33,7 +33,7 @@ class TestDetectContentType:
             (_jwt_sample(), "jwt_string"),
         ],
     )
-    def test_positive_detection(self, value, expected) -> None:
+    def test_positive_detection(self, value: str, expected: str) -> None:
         assert detect_content_type(value) == expected
 
     @pytest.mark.parametrize(
@@ -46,7 +46,7 @@ class TestDetectContentType:
             "two.segments.only",
         ],
     )
-    def test_negative_detection(self, value) -> None:
+    def test_negative_detection(self, value: str) -> None:
         assert detect_content_type(value) == "string"
 
 

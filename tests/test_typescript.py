@@ -35,7 +35,7 @@ class TestScalars:
             ("text", "type Root = string;"),
         ],
     )
-    def test_scalar_root(self, value, expected) -> None:
+    def test_scalar_root(self, value: object, expected: str) -> None:
         assert render(value) == expected
 
     def test_custom_root_name(self) -> None:
