@@ -62,6 +62,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = Config(
         detect_content_types=args.detect_content_types,
         max_depth=args.max_depth,
+        track_cardinality=args.track_cardinality,
+        include_frequency=args.include_frequency,
+        include_stats=args.include_stats,
     )
     result = describe(data, config=config)
     print(_render(result, args.format, args.indent, args.root_name))
@@ -112,6 +115,30 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         metavar="N",
         help="truncate output below this nesting depth",
+    )
+    parser.add_argument(
+        "--track-cardinality",
+        action="store_true",
+        default=False,
+        help="detect enums, always-null fields, and collect statistics",
+    )
+    parser.add_argument(
+        "--include-frequency",
+        action="store_true",
+        default=False,
+        help="show observation counts alongside enum values",
+    )
+    parser.add_argument(
+        "--include-stats",
+        action="store_true",
+        default=True,
+        help="show numeric/string/boolean statistics (default: True)",
+    )
+    parser.add_argument(
+        "--no-stats",
+        action="store_false",
+        dest="include_stats",
+        help="disable numeric/string/boolean statistics",
     )
     parser.add_argument("--version", action="version", version=f"jsonhaiku {__version__}")
     return parser

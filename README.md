@@ -141,6 +141,59 @@ result.render("typescript", root_name="Session")
 result.render("yaml")
 ```
 
+### Cardinality tracking and enum detection
+
+The real power: detect low-cardinality fields and render them as enums.
+
+```python
+from jsonhaiku import describe, Config
+
+cfg = Config(track_cardinality=True)
+result = describe(data, config=cfg)
+```
+
+Fields that only take a handful of values become enums:
+```
+"session_type": "enum('Symposium' | 'Workshop' | 'Special Interest' | 'Plenary')"
+```
+
+Fields that are always null, always empty arrays, or always empty objects get
+explicit markers:
+```
+"parent_id": "always_null"
+"technical_equipment": "always_null"
+```
+
+Numeric fields get range statistics:
+```
+"duration": "integer (min=30, max=240, mean=95)"
+```
+
+String fields get length distributions:
+```
+"title": "string (len 12..180, avg 47)"
+```
+
+Boolean fields with skewed distributions are annotated:
+```
+"published": "boolean (94% true)"
+```
+
+#### Configuration knobs
+
+```python
+Config(
+    track_cardinality=True,          # master switch
+    enum_max_values=20,              # max distinct values for enum
+    enum_cardinality_ratio=0.05,     # max unique/total ratio
+    unique_value_cap=100,            # drop tracking above this
+    include_frequency=False,         # show counts per enum value
+    include_stats=True,              # show numeric/string stats
+    detect_always_null=True,         # detect always-null fields
+    always_null_min_observations=3,  # min observations for always-null
+)
+```
+
 ### Content-type detection
 
 Opt-in scanning recognises common string patterns:
@@ -202,6 +255,9 @@ jsonhaiku response.json --format typescript --root-name Session
 jsonhaiku response.json --format yaml
 jsonhaiku response.json --format json_schema
 jsonhaiku response.json --detect-content-types --max-depth 3
+jsonhaiku response.json --track-cardinality
+jsonhaiku response.json --track-cardinality --include-frequency
+jsonhaiku response.json --track-cardinality --no-stats
 ```
 
 ### Planned API
@@ -236,7 +292,7 @@ Actively developed. What's done and what's landing next, roughly in order:
 
 - [x] The core `describe()` API, compact rendering, JSON Schema, and a CLI.
 - [x] More output formats (TypeScript, YAML), content-type detection, and token counting.
-- [ ] Enum detection and value statistics.
+- [x] Enum detection and value statistics.
 - [ ] Smart representative sample selection.
 - [ ] A stateful path-scoped API for agent-driven exploration.
 - [ ] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.

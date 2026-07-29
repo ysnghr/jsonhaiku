@@ -13,6 +13,30 @@ deprecation warnings first.
 
 ### Added
 
+- **Cardinality tracking and enum detection** (opt-in via
+  `Config(track_cardinality=True)`): tracks per-path statistics and detects
+  low-cardinality fields, rendering them as enums instead of generic types.
+  `"string"` becomes `"enum('active' | 'pending' | 'archived')"`.
+- **Numeric statistics** (`include_stats=True`): min, max, and mean for numeric
+  fields. Timestamp-range numbers are detected and rendered as ISO date ranges.
+- **String statistics**: min/max/avg length for string fields.
+- **Boolean distribution**: skew detection (≥95% one-sided) shown as
+  `"boolean (94% true)"`.
+- **Always-null and always-empty detection**: fields that are always `null`,
+  empty arrays, or empty objects are replaced with explicit `always_null`,
+  `always_empty_array`, or `always_empty_object` markers.
+- **Enum rendering** in all four formats: compact, TypeScript literal unions,
+  JSON Schema `enum` keyword, and YAML.
+- **Frequency display** (opt-in `include_frequency=True`): shows observation
+  counts per enum value.
+- **Bounded memory**: unique-value tracking caps at `unique_value_cap` (default
+  100) to prevent OOM on large datasets.
+- `EnumNode` type in the type tree for programmatic access to detected enums.
+- CLI gains `--track-cardinality`, `--include-frequency`, and `--no-stats` flags.
+- Config gains: `track_cardinality`, `enum_max_values`, `enum_cardinality_ratio`,
+  `unique_value_cap`, `include_frequency`, `include_stats`, `detect_always_null`,
+  `always_null_min_observations`.
+
 - **Four output formats** — each renderer is a pure function over the type tree:
   - `result.compact` — TypeScript-flavored inline JSON (the default, unchanged).
   - `result.typescript(root_name="Root")` — full TypeScript interface declarations.

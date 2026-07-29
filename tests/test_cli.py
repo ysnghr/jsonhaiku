@@ -96,6 +96,15 @@ class TestFormats:
     def test_max_depth_flag(self) -> None:
         assert main(["--max-depth", "1"]) == 0
 
+    def test_track_cardinality_flag(self) -> None:
+        assert main(["--track-cardinality"]) == 0
+
+    def test_include_frequency_flag(self) -> None:
+        assert main(["--track-cardinality", "--include-frequency"]) == 0
+
+    def test_no_stats_flag(self) -> None:
+        assert main(["--track-cardinality", "--no-stats"]) == 0
+
 
 class TestFailures:
     def test_invalid_json_reports_and_exits_nonzero(
