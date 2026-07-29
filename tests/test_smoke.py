@@ -65,11 +65,6 @@ def test_does_not_shadow_a_stdlib_module() -> None:
     assert "jsonhaiku" not in sys.stdlib_module_names
 
 
-@pytest.mark.parametrize("attribute", ["JsonHaiku"])
-def test_planned_api_is_not_yet_advertised(attribute: str) -> None:
-    """Fails the day a planned API lands -- at which point, test it properly.
-
-    This keeps the README's "planned API" section honest: nothing is half
-    exported before it is documented and covered.
-    """
-    assert not hasattr(jsonhaiku, attribute)
+def test_jsonhaiku_is_exported() -> None:
+    assert hasattr(jsonhaiku, "JsonHaiku")
+    assert callable(jsonhaiku.JsonHaiku)
