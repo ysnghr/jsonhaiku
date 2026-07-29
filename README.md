@@ -346,6 +346,34 @@ haiku> enum $[*].session_type.name
 haiku> filter $[*] room.name == 'HALL H'
 ```
 
+### MCP server
+
+Point Claude Desktop, Cursor, Continue, or Zed at a JSON payload and let the
+LLM explore it interactively — no code required:
+
+```bash
+pip install jsonhaiku-mcp       # or: uvx jsonhaiku-mcp
+```
+
+Add to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "jsonhaiku": {
+      "command": "uvx",
+      "args": ["jsonhaiku-mcp"]
+    }
+  }
+}
+```
+
+The server exposes 10 tools: `jsonhaiku_load`, `jsonhaiku_overview`,
+`jsonhaiku_describe`, `jsonhaiku_sample`, `jsonhaiku_enum`, `jsonhaiku_stats`,
+`jsonhaiku_filter`, `jsonhaiku_search`, `jsonhaiku_list_paths`, and
+`jsonhaiku_unload`. See the [jsonhaiku-mcp README](./jsonhaiku-mcp/README.md)
+for setup details per client.
+
 ## Positioning
 
 - **Not a schema validator.** Use `pydantic` or `jsonschema` for that. jsonhaiku describes; it doesn't enforce.
@@ -361,7 +389,7 @@ Actively developed. What's done and what's landing next, roughly in order:
 - [x] Enum detection and value statistics.
 - [x] Smart representative sample selection.
 - [x] A stateful path-scoped API for agent-driven exploration.
-- [ ] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.
+- [x] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.
 - [ ] Streaming support for JSON files that don't fit in memory.
 
 ## Development

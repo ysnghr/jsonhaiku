@@ -13,6 +13,25 @@ deprecation warnings first.
 
 ### Added
 
+- **MCP server** (`jsonhaiku-mcp` package): expose the JsonHaiku API as
+  10 MCP tools for Claude Desktop, Cursor, Continue, Zed, and any
+  MCP-capable client. Install with `pip install jsonhaiku-mcp` or use
+  `uvx jsonhaiku-mcp` for zero-install setup.
+  - `jsonhaiku_load` — load JSON from file, URL, or inline text.
+  - `jsonhaiku_overview` — high-level summary of the payload.
+  - `jsonhaiku_describe` — inferred type schema at any JSONPath.
+  - `jsonhaiku_sample` — representative sample values.
+  - `jsonhaiku_enum` — unique values sorted by frequency.
+  - `jsonhaiku_stats` — numeric/string statistics.
+  - `jsonhaiku_filter` — safe DSL filtering.
+  - `jsonhaiku_search` — substring search across values.
+  - `jsonhaiku_list_paths` — enumerate all observed paths.
+  - `jsonhaiku_unload` — release session memory.
+- **Session management** with configurable TTL (default 1 hour),
+  automatic cleanup, and thread-safe concurrent access.
+- **Size and timeout caps**: 200 MB max payload, 30s URL fetch timeout.
+- Setup documentation for Claude Desktop, Cursor, Continue.dev, and Zed.
+
 - **Progressive disclosure API** via `JsonHaiku(data)`: a stateful explorer
   for interactive, path-scoped JSON inspection. Seven accessors return
   compact, LLM-friendly dicts:

@@ -251,7 +251,7 @@ def _fetch_url(url: str) -> str:
 def _parse_json(raw: str) -> object:
     """Parse JSON text, raising a clear error on failure."""
     try:
-        return json.loads(raw)  # type: ignore[no-any-return]
+        return json.loads(raw)
     except json.JSONDecodeError as exc:
         msg = f"Invalid JSON: {exc}"
         raise ValueError(msg) from None
