@@ -258,15 +258,50 @@ jsonhaiku response.json --detect-content-types --max-depth 3
 jsonhaiku response.json --track-cardinality
 jsonhaiku response.json --track-cardinality --include-frequency
 jsonhaiku response.json --track-cardinality --no-stats
+jsonhaiku response.json --samples 3
+jsonhaiku response.json --samples 3 --redact-samples
+```
+
+### Smart sample selection
+
+Show the LLM a few records that actually cover the edge cases — not just
+`data[0]`:
+
+```python
+result = describe(data, samples=3)
+
+for s in result.samples:
+    print(s.reason)   # "typical: median field completeness"
+    print(s.value)    # the actual JSON record
+    print(s.path)     # "$[42]"
+
+# Render schema + samples together, ready for a prompt:
+print(result.render_with_samples())
+```
+
+The default strategy picks:
+1. A **typical** record (median field completeness).
+2. **Nullable coverage** — records where rarely-null fields are null.
+3. An **extreme** record (longest serialized size).
+4. A **diversity check** ensures chosen samples aren't redundant.
+
+Custom strategies are supported:
+```python
+from jsonhaiku.samples import SampleStrategy
+
+class MyStrategy(SampleStrategy):
+    def score(self, record, corpus):
+        return len(record.get("tags", []))
+
+result = describe(data, samples=5, sample_strategy=MyStrategy())
+```
+
+Opt-in PII redaction replaces emails, phone numbers, and sensitive field values:
+```python
+result = describe(data, samples=3, redact_samples=True)
 ```
 
 ### Planned API
-
-Not built yet — see the roadmap below:
-
-```python
-result.samples            # list — smart-selected representative records
-```
 
 For agentic exploration of large payloads, a stateful interface with path-scoped access:
 
@@ -293,7 +328,7 @@ Actively developed. What's done and what's landing next, roughly in order:
 - [x] The core `describe()` API, compact rendering, JSON Schema, and a CLI.
 - [x] More output formats (TypeScript, YAML), content-type detection, and token counting.
 - [x] Enum detection and value statistics.
-- [ ] Smart representative sample selection.
+- [x] Smart representative sample selection.
 - [ ] A stateful path-scoped API for agent-driven exploration.
 - [ ] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.
 - [ ] Streaming support for JSON files that don't fit in memory.

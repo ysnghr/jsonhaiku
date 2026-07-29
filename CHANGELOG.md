@@ -13,6 +13,21 @@ deprecation warnings first.
 
 ### Added
 
+- **Smart sample selection** via `describe(data, samples=3)`: picks
+  representative records covering typical shape, nullable-field variations,
+  and extreme outliers rather than naively returning the first N.
+  Each sample carries a `reason` string explaining why it was chosen.
+- **Sample strategies**: `DefaultStrategy` (typical + nullable + extreme +
+  diversity dedup), `RandomStrategy` (seeded), and `FirstNStrategy`. Custom
+  strategies via the `SampleStrategy` abstract base class.
+- **PII redaction** (opt-in `redact_samples=True`): replaces emails, phone
+  numbers, and fields named `password`/`token`/`secret`/`api_key` etc. with
+  safe placeholders in sample values.
+- `result.render_with_samples(fmt)` — renders the type description with
+  selected samples appended, ready to hand to an LLM.
+- `Sample` dataclass exported from the top-level package.
+- CLI gains `--samples K` and `--redact-samples` flags.
+
 - **Cardinality tracking and enum detection** (opt-in via
   `Config(track_cardinality=True)`): tracks per-path statistics and detects
   low-cardinality fields, rendering them as enums instead of generic types.
