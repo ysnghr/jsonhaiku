@@ -10,12 +10,15 @@ from __future__ import annotations
 import json
 import statistics
 from dataclasses import dataclass, field
-from typing import Any
+from typing import IO, TYPE_CHECKING, Any
 
 from jsonhaiku.config import Config
 from jsonhaiku.core import describe
 from jsonhaiku.filter_dsl import evaluate as filter_evaluate
 from jsonhaiku.path import parse_path, resolve, resolve_paths
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ["JsonHaiku"]
 
@@ -43,6 +46,7 @@ class JsonHaiku:
     _config: Config
     _path_index: dict[str, list[object]] = field(repr=False)
     _size_bytes: int
+    _stream_result: Any = field(default=None, repr=False)
 
     def __init__(self, data: object, config: Config | None = None) -> None:
         """Index *data* for interactive exploration."""
@@ -50,6 +54,48 @@ class JsonHaiku:
         self._config = config or Config(track_cardinality=True)
         self._path_index = resolve_paths(data)
         self._size_bytes = len(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+        self._stream_result = None
+
+    @classmethod
+    def from_stream(
+        cls,
+        stream: IO[bytes],
+        *,
+        config: Config | None = None,
+        memory_budget_mb: int = 500,
+        reservoir_k: int = 100,
+        seed: int | None = None,
+        on_progress: Callable[[int, int], None] | None = None,
+    ) -> JsonHaiku:
+        """Create a JsonHaiku from a streaming JSON source.
+
+        Args:
+            stream: Binary stream containing JSON data.
+            config: Optional configuration for inference.
+            memory_budget_mb: Soft memory budget in megabytes.
+            reservoir_k: Number of sample records to keep.
+            seed: Random seed for reproducible sampling.
+            on_progress: Callback ``(bytes_read, records_seen)``.
+
+        Returns:
+            A JsonHaiku explorer backed by streaming results.
+        """
+        from jsonhaiku.streaming import stream_ingest  # noqa: PLC0415
+
+        result = stream_ingest(
+            stream,
+            config=config,
+            memory_budget_mb=memory_budget_mb,
+            reservoir_k=reservoir_k,
+            seed=seed,
+            on_progress=on_progress,
+        )
+
+        samples = result.samples
+        instance = cls(samples, config=result.config)
+        instance._stream_result = result
+        instance._size_bytes = result.bytes_read
+        return instance
 
     def overview(self) -> dict[str, Any]:
         """Return a top-level orientation summary.
@@ -58,6 +104,9 @@ class JsonHaiku:
         how large it is, and what the top-level keys are — enough to
         decide which path to drill into next.
         """
+        if self._stream_result is not None:
+            return self._streamed_overview()
+
         root_kind = _kind_of(self._data)
         result: dict[str, Any] = {
             "root_kind": root_kind,
@@ -74,6 +123,51 @@ class JsonHaiku:
 
         return result
 
+    def _streamed_overview(self) -> dict[str, Any]:
+        """Overview for stream-ingested data."""
+        from jsonhaiku.nodes import ArrayNode, ObjectNode  # noqa: PLC0415
+
+        sr = self._stream_result
+        root = sr.root
+        root_kind = (
+            "array"
+            if isinstance(root, ArrayNode)
+            else ("object" if isinstance(root, ObjectNode) else "scalar")
+        )
+        result: dict[str, Any] = {
+            "root_kind": root_kind,
+            "total_size_bytes": sr.bytes_read,
+            "records_seen": sr.records_seen,
+            "unique_paths": len(sr.stats) if sr.stats else len(self._path_index),
+            "approximate": sr.approximate,
+        }
+        if isinstance(root, ArrayNode) and isinstance(root.items, ObjectNode):
+            result["top_keys"] = list(root.items.fields.keys())
+        elif sr.samples and isinstance(sr.samples[0], dict):
+            result["top_keys"] = list(sr.samples[0].keys())
+        if sr.warnings:
+            result["warnings"] = sr.warnings
+        return result
+
+    def _streamed_describe(
+        self,
+        *,
+        depth: int | None,
+        fmt: str,
+    ) -> dict[str, Any]:
+        """Describe using the pre-computed stream root."""
+        from jsonhaiku.nodes import to_dict  # noqa: PLC0415
+        from jsonhaiku.renderers.compact import render_compact  # noqa: PLC0415
+
+        root = self._stream_result.root
+        if fmt == "tree":
+            return {"path": "$", "depth": depth, "tree": to_dict(root)}
+        schema = render_compact(root, max_depth=depth)
+        result: dict[str, Any] = {"path": "$", "depth": depth, "schema": schema}
+        if self._stream_result.approximate:
+            result["approximate"] = True
+        return result
+
     def describe(
         self,
         path: str = "$",
@@ -88,6 +182,9 @@ class JsonHaiku:
             depth: Max nesting depth in the output. ``None`` for unlimited.
             fmt: Output format — ``"compact"`` (default) or ``"tree"``.
         """
+        if self._stream_result is not None and path == "$":
+            return self._streamed_describe(depth=depth, fmt=fmt)
+
         matches = resolve(self._data, path)
         if not matches:
             return {"path": path, "error": "no matches"}
@@ -130,9 +227,7 @@ class JsonHaiku:
             "total": total,
             "returned": len(selected),
             "truncated": truncated,
-            "values": [
-                {"path": m.path, "value": m.value} for m in selected
-            ],
+            "values": [{"path": m.path, "value": m.value} for m in selected],
         }
 
     def enum(

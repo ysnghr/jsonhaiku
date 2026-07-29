@@ -14,14 +14,14 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any
 
 from jsonhaiku.__about__ import __version__
 from jsonhaiku.config import Config
 from jsonhaiku.core import describe
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from jsonhaiku.explorer import JsonHaiku
     from jsonhaiku.result import Result
@@ -71,6 +71,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_shell(effective_argv[1])
 
     args = _build_parser().parse_args(argv)
+
+    use_stream = args.stream or _should_auto_stream(args.file)
+    if use_stream:
+        return _run_stream(args)
 
     try:
         payload = _read(args.file)
@@ -184,8 +188,105 @@ def _build_parser() -> argparse.ArgumentParser:
         default=False,
         help="replace PII-like values in samples with safe placeholders",
     )
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        default=False,
+        help="use streaming mode for large files (auto-enabled above 100 MB)",
+    )
+    parser.add_argument(
+        "--memory-budget",
+        type=int,
+        default=500,
+        metavar="MB",
+        help="soft memory budget in MB for streaming mode (default: 500)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        metavar="N",
+        help="random seed for reproducible reservoir sampling in streaming mode",
+    )
     parser.add_argument("--version", action="version", version=f"jsonhaiku {__version__}")
     return parser
+
+
+_AUTO_STREAM_THRESHOLD = 100 * 1024 * 1024
+
+
+def _should_auto_stream(file_arg: str) -> bool:
+    """Return True if the file is large enough to auto-enable streaming."""
+    if file_arg == STDIN_ARGUMENT:
+        return False
+    try:
+        return Path(file_arg).stat().st_size > _AUTO_STREAM_THRESHOLD
+    except OSError:
+        return False
+
+
+def _run_stream(args: argparse.Namespace) -> int:
+    """Run streaming mode."""
+    from jsonhaiku.renderers.compact import render_compact  # noqa: PLC0415
+    from jsonhaiku.streaming import stream_ingest  # noqa: PLC0415
+
+    config = Config(
+        detect_content_types=args.detect_content_types,
+        max_depth=args.max_depth,
+        track_cardinality=args.track_cardinality,
+        include_frequency=args.include_frequency,
+        include_stats=args.include_stats,
+    )
+
+    try:
+        stream = _open_stream(args.file)
+    except OSError as error:
+        return _fail(f"cannot read {args.file}: {error.strerror or error}")
+
+    progress_cb = _make_progress_callback() if sys.stderr.isatty() else None
+
+    try:
+        result = stream_ingest(
+            stream,
+            config=config,
+            memory_budget_mb=args.memory_budget,
+            seed=args.seed,
+            on_progress=progress_cb,
+        )
+    finally:
+        if args.file != STDIN_ARGUMENT:
+            stream.close()
+
+    if progress_cb is not None:
+        print(file=sys.stderr)
+
+    output = render_compact(result.root, max_depth=args.max_depth)
+    print(output)
+
+    if result.warnings:
+        for warning in result.warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+    if result.approximate:
+        print("note: some statistics are approximate (HyperLogLog)", file=sys.stderr)
+
+    return EXIT_OK
+
+
+def _open_stream(file_arg: str) -> IO[bytes]:
+    """Open a binary stream for the given file argument."""
+    if file_arg == STDIN_ARGUMENT:
+        return sys.stdin.buffer
+    return Path(file_arg).open("rb")
+
+
+def _make_progress_callback() -> Callable[[int, int], None]:
+    """Return a progress callback that prints a status line to stderr."""
+
+    def on_progress(bytes_read: int, records_seen: int) -> None:
+        mb = bytes_read / (1024 * 1024)
+        print(f"\r  {mb:.1f} MB read, {records_seen:,} records", end="", file=sys.stderr)
+
+    return on_progress
 
 
 def _run_shell(file_path: str) -> int:
@@ -204,8 +305,7 @@ def _run_shell(file_path: str) -> int:
 
     h = Explorer(data)
     ov = h.overview()
-    print(f"Loaded {ov['root_kind']} ({ov['total_size_bytes']} bytes, "
-          f"{ov['unique_paths']} paths)")
+    print(f"Loaded {ov['root_kind']} ({ov['total_size_bytes']} bytes, {ov['unique_paths']} paths)")
     print('Type "help" for commands, "quit" to exit.\n')
 
     while True:

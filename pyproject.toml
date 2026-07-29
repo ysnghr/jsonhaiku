@@ -49,6 +49,7 @@ dependencies = []
 [project.optional-dependencies]
 # Feature extras -----------------------------------------------------------
 tokens = ["tiktoken>=0.5"]
+streaming = ["ijson>=3.2", "datasketch>=1.6"]
 
 # Contributor extras -------------------------------------------------------
 test = [
@@ -74,7 +75,7 @@ typing = [
 ]
 # Recursive extras keep `dev` a single install target without duplicating pins.
 dev = [
-    "jsonhaiku[lint,test,tokens,typing]",
+    "jsonhaiku[lint,streaming,test,tokens,typing]",
     "nox>=2024.4.15",
     "pre-commit>=3.7",
 ]
@@ -229,7 +230,7 @@ sqlite_cache = true
 
 # Third-party packages that ship no type information of their own.
 [[tool.mypy.overrides]]
-module = ["jsonschema.*", "tiktoken.*"]
+module = ["datasketch.*", "ijson.*", "jsonschema.*", "tiktoken.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
