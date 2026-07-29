@@ -387,9 +387,7 @@ def _find_nullable_fields(records: list[object]) -> list[tuple[str, float]]:
 
 def _median_size(records: list[object]) -> int:
     """Return the median serialized size of the records."""
-    sizes = sorted(
-        len(json.dumps(r, ensure_ascii=False, separators=(",", ":"))) for r in records
-    )
+    sizes = sorted(len(json.dumps(r, ensure_ascii=False, separators=(",", ":"))) for r in records)
     if not sizes:
         return 0
     return sizes[len(sizes) // 2]

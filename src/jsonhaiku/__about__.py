@@ -10,4 +10,4 @@ Versioning policy:
       disclosure API (Phase 5) has settled.
 """
 
-__version__ = "0.6.0.dev0"
+__version__ = "0.7.0.dev0"

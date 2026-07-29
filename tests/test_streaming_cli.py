@@ -30,9 +30,7 @@ class TestStreamFlag:
         out = capsys.readouterr().out
         assert len(out.strip()) > 0
 
-    def test_stream_with_seed(
-        self, array_file: Path, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_stream_with_seed(self, array_file: Path, capsys: pytest.CaptureFixture[str]) -> None:
         rc = main(["--stream", "--seed", "42", str(array_file)])
         assert rc == 0
         out1 = capsys.readouterr().out
@@ -55,9 +53,7 @@ class TestStreamFlag:
         assert rc == 1
         assert "cannot read" in capsys.readouterr().err
 
-    def test_stream_single_object(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_stream_single_object(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         path = tmp_path / "obj.json"
         path.write_text('{"key": "value"}', encoding="utf-8")
         rc = main(["--stream", str(path)])

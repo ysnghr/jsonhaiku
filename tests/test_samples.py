@@ -41,8 +41,11 @@ class TestDeterminism:
 class TestNullableCoverage:
     def test_rare_null_field_selected(self) -> None:
         data: list[object] = [
-            {"id": i, "email": None if i == 42 else f"u{i}@test.com",
-             "extra": "x" if i % 3 == 0 else None}
+            {
+                "id": i,
+                "email": None if i == 42 else f"u{i}@test.com",
+                "extra": "x" if i % 3 == 0 else None,
+            }
             for i in range(100)
         ]
         result = select_samples(data, 4)

@@ -374,6 +374,38 @@ The server exposes 10 tools: `jsonhaiku_load`, `jsonhaiku_overview`,
 `jsonhaiku_unload`. See the [jsonhaiku-mcp README](./jsonhaiku-mcp/README.md)
 for setup details per client.
 
+### Streaming large files
+
+Process JSON files that don't fit in RAM using event-driven parsing:
+
+```python
+from jsonhaiku import JsonHaiku
+
+h = JsonHaiku.from_stream(open("huge.json", "rb"), seed=42)
+print(h.overview())
+print(h.describe("$"))
+```
+
+From the CLI, use `--stream` (or it auto-engages above 100 MB):
+
+```bash
+jsonhaiku --stream huge.json
+jsonhaiku --stream --seed 42 --memory-budget 200 huge.json
+```
+
+Under the hood:
+- **ijson** parses the stream without loading the full document.
+- **Reservoir sampling** (Vitter's Algorithm R) keeps a fixed-size uniform
+  random sample. Pass `seed` for reproducible results.
+- **HyperLogLog** provides approximate cardinality counting (~0.8% error)
+  when the exact set exceeds 1024 unique values.
+
+Install the streaming extra:
+
+```bash
+pip install "jsonhaiku[streaming]"
+```
+
 ## Positioning
 
 - **Not a schema validator.** Use `pydantic` or `jsonschema` for that. jsonhaiku describes; it doesn't enforce.
@@ -390,7 +422,7 @@ Actively developed. What's done and what's landing next, roughly in order:
 - [x] Smart representative sample selection.
 - [x] A stateful path-scoped API for agent-driven exploration.
 - [x] An MCP server for Claude Desktop, Cursor, Continue, and other MCP clients.
-- [ ] Streaming support for JSON files that don't fit in memory.
+- [x] Streaming support for JSON files that don't fit in memory.
 
 ## Development
 

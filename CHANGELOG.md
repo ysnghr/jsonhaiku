@@ -13,6 +13,20 @@ deprecation warnings first.
 
 ### Added
 
+- **Streaming & large-file support** (`pip install jsonhaiku[streaming]`):
+  process JSON files that don't fit in RAM via event-driven parsing.
+  - `JsonHaiku.from_stream(stream)` — classmethod to create an explorer from
+    a binary stream, using `ijson` for parsing.
+  - **Reservoir sampling** (Vitter's Algorithm R): keeps a fixed-size uniform
+    random sample from the stream. `seed` parameter for reproducible results.
+  - **HyperLogLog** approximate cardinality counting (~0.8% error) via
+    `datasketch`, automatically engaging when the exact set exceeds 1024
+    unique values. `approximate` flag on results when HLL is active.
+  - Progress callback `on_progress(bytes_read, records_seen)` for monitoring.
+  - CLI gains `--stream`, `--memory-budget MB`, and `--seed N` flags.
+    Streaming auto-engages above 100 MB.
+  - New optional dependencies: `ijson>=3.2`, `datasketch>=1.6`.
+
 - **MCP server** (`jsonhaiku-mcp` package): expose the JsonHaiku API as
   10 MCP tools for Claude Desktop, Cursor, Continue, Zed, and any
   MCP-capable client. Install with `pip install jsonhaiku-mcp` or use

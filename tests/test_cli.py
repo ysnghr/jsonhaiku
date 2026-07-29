@@ -188,9 +188,7 @@ class TestShell:
         out = capsys.readouterr().out
         assert "results" in out
 
-    def test_shell_eof_exits(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_shell_eof_exits(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         path = tmp_path / "data.json"
         path.write_text(PAYLOAD, encoding="utf-8")
 
