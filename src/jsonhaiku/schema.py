@@ -33,6 +33,13 @@ _JSON_SCHEMA_TYPES: dict[str, str] = {
     "float": "number",
     "number": "number",
     "string": "string",
+    "html_string": "string",
+    "url_string": "string",
+    "iso_date": "string",
+    "iso_datetime": "string",
+    "uuid_string": "string",
+    "email_string": "string",
+    "jwt_string": "string",
     # "unknown" has no JSON Schema equivalent and is handled as "any" instead.
 }
 

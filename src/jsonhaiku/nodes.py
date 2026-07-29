@@ -34,19 +34,36 @@ PrimitiveName: TypeAlias = Literal[
     "number",
     "string",
     "unknown",
+    "html_string",
+    "url_string",
+    "iso_date",
+    "iso_datetime",
+    "uuid_string",
+    "email_string",
+    "jwt_string",
 ]
 """The scalar type names jsonhaiku can emit.
 
 ``number`` is the merge of ``integer`` and ``float`` (JSON draws no such
 distinction), and ``unknown`` marks a value jsonhaiku could not describe.
+
+The ``*_string`` variants are emitted when content-type detection is enabled
+and a string value matches a known pattern.
 """
 
 
 @dataclass(frozen=True, slots=True)
 class Primitive:
-    """A scalar type, such as ``integer`` or ``string``."""
+    """A scalar type, such as ``integer`` or ``string``.
+
+    Attributes:
+        name: The type name.
+        string_meta: Optional rendering annotation for long plain strings,
+            e.g. ``"len≈523, sample: 'The quick brown fox…'"``.
+    """
 
     name: PrimitiveName
+    string_meta: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,6 +148,28 @@ FLOAT = Primitive("float")
 NUMBER = Primitive("number")
 STRING = Primitive("string")
 UNKNOWN = Primitive("unknown")
+
+HTML_STRING = Primitive("html_string")
+URL_STRING = Primitive("url_string")
+ISO_DATE = Primitive("iso_date")
+ISO_DATETIME = Primitive("iso_datetime")
+UUID_STRING = Primitive("uuid_string")
+EMAIL_STRING = Primitive("email_string")
+JWT_STRING = Primitive("jwt_string")
+
+STRING_CONTENT_TYPES: frozenset[PrimitiveName] = frozenset({
+    "html_string",
+    "url_string",
+    "iso_date",
+    "iso_datetime",
+    "uuid_string",
+    "email_string",
+    "jwt_string",
+})
+"""Content-type string variant names, for merge and rendering logic."""
+
+ALL_STRING_NAMES: frozenset[PrimitiveName] = STRING_CONTENT_TYPES | {"string"}
+"""Every primitive name that represents a string."""
 
 
 def canonical(node: Node) -> str:

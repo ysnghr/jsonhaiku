@@ -4,7 +4,7 @@ Reads JSON from a file or standard input and writes a description to standard
 output, so the library is one pipe away from any shell::
 
     curl -s https://api.example.com/sessions | jsonhaiku
-    jsonhaiku response.json --format schema
+    jsonhaiku response.json --format typescript
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from jsonhaiku.__about__ import __version__
+from jsonhaiku.config import Config
 from jsonhaiku.core import describe
 
 if TYPE_CHECKING:
@@ -31,6 +32,8 @@ STDIN_ARGUMENT = "-"
 EXIT_OK = 0
 EXIT_BAD_INPUT = 1
 DEFAULT_INDENT = 2
+
+_VALID_FORMATS = ("compact", "typescript", "json_schema", "yaml", "schema", "tree")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -56,7 +59,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     except json.JSONDecodeError as error:
         return _fail(f"invalid JSON: {error}")
 
-    print(_render(describe(data), args.format, args.indent))
+    config = Config(
+        detect_content_types=args.detect_content_types,
+        max_depth=args.max_depth,
+    )
+    result = describe(data, config=config)
+    print(_render(result, args.format, args.indent, args.root_name))
     return EXIT_OK
 
 
@@ -75,7 +83,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-f",
         "--format",
-        choices=("compact", "schema", "tree"),
+        choices=_VALID_FORMATS,
         default="compact",
         help="output format (default: compact)",
     )
@@ -84,7 +92,26 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=DEFAULT_INDENT,
         metavar="N",
-        help=f"indentation for the schema and tree formats (default: {DEFAULT_INDENT})",
+        help=f"indentation for JSON formats (default: {DEFAULT_INDENT})",
+    )
+    parser.add_argument(
+        "--root-name",
+        default="Root",
+        metavar="NAME",
+        help='interface name for the typescript format (default: "Root")',
+    )
+    parser.add_argument(
+        "--detect-content-types",
+        action="store_true",
+        default=False,
+        help="scan string values for HTML, URL, date, UUID, email, JWT patterns",
+    )
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=None,
+        metavar="N",
+        help="truncate output below this nesting depth",
     )
     parser.add_argument("--version", action="version", version=f"jsonhaiku {__version__}")
     return parser
@@ -97,11 +124,19 @@ def _read(file: str) -> str:
     return Path(file).read_text(encoding="utf-8")
 
 
-def _render(result: Result, output_format: str, indent: int) -> str:
+def _render(result: Result, output_format: str, indent: int, root_name: str) -> str:
     """Render ``result`` in the requested output format."""
     if output_format == "compact":
         return result.compact
-    document = result.schema if output_format == "schema" else result.tree
+    if output_format == "typescript":
+        return result.typescript(root_name=root_name)
+    if output_format == "yaml":
+        return result.yaml
+    if output_format == "json_schema":
+        return json.dumps(result.json_schema, indent=indent, ensure_ascii=False)
+    if output_format == "schema":
+        return json.dumps(result.schema, indent=indent, ensure_ascii=False)
+    document = result.tree
     return json.dumps(document, indent=indent, ensure_ascii=False)
 
 

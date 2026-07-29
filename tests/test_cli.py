@@ -89,7 +89,7 @@ class TestFailures:
 
     def test_unknown_format_is_a_usage_error(self) -> None:
         with pytest.raises(SystemExit) as exit_info:
-            main(["--format", "yaml"])
+            main(["--format", "nope"])
         assert exit_info.value.code == 2
 
 

@@ -15,7 +15,9 @@ import warnings
 from functools import reduce
 from typing import TYPE_CHECKING
 
+from jsonhaiku.config import Config
 from jsonhaiku.nodes import (
+    ALL_STRING_NAMES,
     BOOLEAN,
     FLOAT,
     INTEGER,
@@ -47,8 +49,6 @@ __all__ = [
 
 _NUMERIC_NAMES = frozenset({"integer", "float", "number"})
 
-# Order matters: bool must precede int, because isinstance(True, int) is True in
-# Python. Get this wrong and every boolean is silently described as an integer.
 _SCALAR_TYPES: tuple[tuple[type, Primitive], ...] = (
     (bool, BOOLEAN),
     (int, INTEGER),
@@ -66,7 +66,7 @@ class UnsupportedValueWarning(UserWarning):
     """
 
 
-def describe(data: object) -> Result:
+def describe(data: object, config: Config | None = None) -> Result:
     """Describe a JSON value.
 
     This is the front door of the library.
@@ -75,6 +75,8 @@ def describe(data: object) -> Result:
         data: Any JSON value — a dict, a list of thousands of records, or a bare
             scalar. Values that :func:`json.dumps` could not serialise are
             described as ``unknown`` and warned about.
+        config: Optional configuration controlling content-type detection,
+            long-string handling, and depth limiting.
 
     Returns:
         A :class:`~jsonhaiku.result.Result` exposing the description in every
@@ -88,15 +90,19 @@ def describe(data: object) -> Result:
           "name": "string | null"
         }]
     """
-    return Result(root=infer(data))
+    cfg = config or Config()
+    return Result(root=infer(data, config=cfg), config=cfg)
 
 
-def infer(value: object) -> Node:
+def infer(value: object, *, config: Config | None = None) -> Node:
     """Infer the type tree of a single JSON value.
 
     Args:
         value: A JSON value: ``None``, ``bool``, ``int``, ``float``, ``str``,
             a sequence (``list`` or ``tuple``), or a ``dict``.
+        config: Optional configuration. When *detect_content_types* is enabled,
+            string values are checked for common patterns (HTML, URL, etc.)
+            and long strings receive length/sample annotations.
 
     Returns:
         The type tree describing ``value``.
@@ -110,13 +116,22 @@ def infer(value: object) -> Node:
         return NULL
     for python_type, scalar in _SCALAR_TYPES:
         if isinstance(value, python_type):
+            if python_type is str and config is not None and config.detect_content_types:
+                from jsonhaiku.content import classify_string  # noqa: PLC0415
+
+                return classify_string(
+                    value,
+                    threshold=config.long_string_threshold,
+                    sample_len=config.long_string_sample_len,
+                )
             return scalar
     if isinstance(value, list | tuple):
-        elements = [infer(element) for element in value]
+        elements = [infer(element, config=config) for element in value]
         return ArrayNode(merge_all(elements) if elements else None)
     if isinstance(value, dict):
-        # Non-string keys are stringified, exactly as json.dumps would.
-        return ObjectNode({str(key): Field(infer(item)) for key, item in value.items()})
+        return ObjectNode(
+            {str(key): Field(infer(item, config=config)) for key, item in value.items()},
+        )
 
     warnings.warn(
         f"cannot describe {type(value).__name__!r}; emitting 'unknown'",
@@ -134,6 +149,10 @@ def merge(left: Node, right: Node) -> Node:
     """
     if left == right:
         return left
+    if isinstance(left, Primitive) and isinstance(right, Primitive):
+        merged = _merge_string_primitives(left, right)
+        if merged is not None:
+            return merged
     if isinstance(left, ObjectNode) and isinstance(right, ObjectNode):
         return _merge_objects(left, right)
     if isinstance(left, ArrayNode) and isinstance(right, ArrayNode):
@@ -159,11 +178,8 @@ def union_of(nodes: Iterable[Node]) -> Node:
     """Build the union of ``nodes``, normalising it into canonical form.
 
     Nested unions are flattened, duplicates removed, mixed numeric types
-    collapsed to ``number``, and — importantly — members of the same kind merged
-    with each other. A union therefore holds at most one array member and at
-    most one object member, which is what makes ``merge`` commutative and
-    associative: ``[null, [], [null]]`` must describe the same way whatever
-    order those three elements arrive in.
+    collapsed to ``number``, mixed string content types collapsed to ``string``,
+    and — importantly — members of the same kind merged with each other.
 
     A union of one member collapses to that member, so this never produces a
     pointless single-member union.
@@ -179,7 +195,7 @@ def union_of(nodes: Iterable[Node]) -> Node:
         else:
             scalars.append(node)
 
-    members = _unique(_collapse_numerics(scalars))
+    members = _unique(_collapse_string_subtypes(_collapse_numerics(scalars)))
     if arrays:
         members.append(reduce(merge, arrays))
     if objects:
@@ -199,12 +215,31 @@ def _flatten(nodes: Iterable[Node]) -> Iterator[Node]:
             yield node
 
 
-def _merge_objects(left: ObjectNode, right: ObjectNode) -> ObjectNode:
-    """Merge two object types: union of keys, recursive merge of shared ones.
+def _merge_string_primitives(left: Primitive, right: Primitive) -> Primitive | None:
+    """Merge two string-family primitives, or return ``None`` if not applicable.
 
-    A key seen on only one side becomes optional, which is what later renders as
-    ``| undefined`` and drops the key from JSON Schema's ``required`` list.
+    Same content type with different metadata → merge metadata.
+    Different content types → collapse to plain ``string``.
     """
+    if left.name not in ALL_STRING_NAMES or right.name not in ALL_STRING_NAMES:
+        return None
+    if left.name == right.name:
+        meta = _merge_string_meta(left.string_meta, right.string_meta)
+        if meta == left.string_meta:
+            return left
+        return Primitive(left.name, string_meta=meta)
+    return STRING
+
+
+def _merge_string_meta(left: str | None, right: str | None) -> str | None:
+    """Merge two string metadata annotations, keeping the first."""
+    if left is None:
+        return right
+    return left
+
+
+def _merge_objects(left: ObjectNode, right: ObjectNode) -> ObjectNode:
+    """Merge two object types: union of keys, recursive merge of shared ones."""
     shared = left.fields.keys() & right.fields.keys()
     fields = {
         key: Field(
@@ -230,11 +265,7 @@ def _merge_items(left: Node | None, right: Node | None) -> Node | None:
 
 
 def _collapse_numerics(nodes: list[Node]) -> list[Node]:
-    """Replace mixed ``integer``/``float`` observations with ``number``.
-
-    JSON has a single number type; ``1`` and ``1.5`` in the same field is not a
-    union worth showing to a model.
-    """
+    """Replace mixed ``integer``/``float`` observations with ``number``."""
     observed = {
         node.name for node in nodes if isinstance(node, Primitive) and node.name in _NUMERIC_NAMES
     }
@@ -242,6 +273,23 @@ def _collapse_numerics(nodes: list[Node]) -> list[Node]:
         return nodes
     return [
         NUMBER if isinstance(node, Primitive) and node.name in _NUMERIC_NAMES else node
+        for node in nodes
+    ]
+
+
+def _collapse_string_subtypes(nodes: list[Node]) -> list[Node]:
+    """Replace mixed string content types with plain ``string``.
+
+    ``html_string + url_string`` → ``string``, just like
+    ``integer + float`` → ``number``.
+    """
+    observed = {
+        node.name for node in nodes if isinstance(node, Primitive) and node.name in ALL_STRING_NAMES
+    }
+    if len(observed) <= 1:
+        return nodes
+    return [
+        STRING if isinstance(node, Primitive) and node.name in ALL_STRING_NAMES else node
         for node in nodes
     ]
 
