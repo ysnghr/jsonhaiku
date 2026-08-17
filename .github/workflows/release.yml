@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
       - name: Read package version
@@ -81,7 +81,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: pypa/gh-action-pypi-publish@v1.14.1
+      - uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
           attestations: true
           print-hash: true
