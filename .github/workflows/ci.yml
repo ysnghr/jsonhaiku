@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
@@ -95,7 +95,7 @@ jobs:
             python-version: "3.14"
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
@@ -134,7 +134,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
       - uses: actions/download-artifact@v8
@@ -178,7 +178,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
       - name: Build sdist and wheel
@@ -227,7 +227,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v9.0.0 # no floating major tag is published
+      - uses: astral-sh/setup-uv@v10.0.1 # no floating major tag is published
         with:
           enable-cache: true
       - name: Run all hooks
