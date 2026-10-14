@@ -61,7 +61,7 @@ test = [
     "packaging>=24.0",
     "jsonschema>=4.21",
 ]
-lint = ["ruff>=0.16,<0.17"]
+lint = ["ruff>=0.16,<0.18"]
 typing = [
     "mypy>=1.15",
     # Type-check the test suite and the task runner too, so fixtures, helpers
